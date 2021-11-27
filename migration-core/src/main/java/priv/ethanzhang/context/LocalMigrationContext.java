@@ -4,8 +4,6 @@ import lombok.Builder;
 import priv.ethanzhang.buffer.MigrationBuffer;
 import priv.ethanzhang.task.MigrationTask;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 
 @Builder
@@ -19,19 +17,17 @@ public class LocalMigrationContext<I, O> implements MigrationContext<I, O> {
 
     private final MigrationBuffer<O> writeBuffer;
 
-    private final AtomicReference<MigrationState> state = new AtomicReference<>(MigrationState.NEW);
-
     private final LongAdder readerCounter = new LongAdder();
 
     private final LongAdder processorCounter = new LongAdder();
 
     private final LongAdder writerCounter = new LongAdder();
 
-    private final AtomicBoolean readerDownMark = new AtomicBoolean();
+    private final MigrationStateHolder readerState = new MigrationStateHolder();
 
-    private final AtomicBoolean processorDownMark = new AtomicBoolean();
+    private final MigrationStateHolder processorState = new MigrationStateHolder();
 
-    private final AtomicBoolean writerDownMark = new AtomicBoolean();
+    private final MigrationStateHolder writerState = new MigrationStateHolder();
 
     @Override
     public MigrationParameter getParameter() {
@@ -54,11 +50,6 @@ public class LocalMigrationContext<I, O> implements MigrationContext<I, O> {
     }
 
     @Override
-    public MigrationState getState() {
-        return state.get();
-    }
-
-    @Override
     public long getReadCount() {
         return readerCounter.longValue();
     }
@@ -74,18 +65,33 @@ public class LocalMigrationContext<I, O> implements MigrationContext<I, O> {
     }
 
     @Override
-    public boolean readerDown() {
-        return readerDownMark.get();
+    public MigrationState getReaderState() {
+        return readerState.get();
     }
 
     @Override
-    public boolean processorDown() {
-        return processorDownMark.get();
+    public MigrationState getProcessorState() {
+        return processorState.get();
     }
 
     @Override
-    public boolean writerDown() {
-        return writerDownMark.get();
+    public MigrationState getWriterState() {
+        return writerState.get();
+    }
+
+    @Override
+    public void setReaderState(MigrationState state) {
+        readerState.transfer(state);
+    }
+
+    @Override
+    public void setProcessorState(MigrationState state) {
+        processorState.transfer(state);
+    }
+
+    @Override
+    public void setWriterState(MigrationState state) {
+        writerState.transfer(state);
     }
 
 }

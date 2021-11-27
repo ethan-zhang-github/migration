@@ -9,22 +9,30 @@ import priv.ethanzhang.task.MigrationTask;
 import java.time.Duration;
 import java.util.Map;
 
+/**
+ * 任务注册表（基于本地内存的实现）
+ */
 class InMemoryMigrationTaskRegistry implements MigrationTaskRegistry {
 
     private final Cache<String, MigrationTask<?, ?>> migrationTasks;
 
     {
         migrationTasks = Caffeine.newBuilder()
-                .initialCapacity(GlobalConfig.INSTANCE.getLocalMigrationTaskManagerConfig().getInitialCapacity())
-                .maximumSize(GlobalConfig.INSTANCE.getLocalMigrationTaskManagerConfig().getMaximumSize())
-                .expireAfterWrite(Duration.ofSeconds(GlobalConfig.INSTANCE.getLocalMigrationTaskManagerConfig().getExpireSeconds()))
+                .initialCapacity(GlobalConfig.LOCAL_REGISTRY.getInitialCapacity())
+                .maximumSize(GlobalConfig.LOCAL_REGISTRY.getMaximumSize())
+                .expireAfterWrite(Duration.ofSeconds(GlobalConfig.LOCAL_REGISTRY.getExpireSeconds()))
                 .evictionListener((taskId, task, cause) -> LocalMigrationTaskManager.INSTANCE.publishEvent(new MigrationTaskEvictedEvent((MigrationTask<?, ?>) task, cause)))
                 .build();
     }
 
     @Override
     public void register(MigrationTask<?, ?> task) {
+        migrationTasks.put(task.getTaskId(), task);
+    }
 
+    @Override
+    public void unregister(MigrationTask<?, ?> task) {
+        migrationTasks.invalidate(task.getTaskId());
     }
 
     @Override

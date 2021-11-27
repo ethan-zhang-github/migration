@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
@@ -81,6 +82,9 @@ public class LocalMigrationBuffer<T> implements MigrationBuffer<T> {
     public List<T> subscribeBatch(int size) {
         List<T> list = new ArrayList<>(queue.size());
         T head = subscribe();
+        if (head == null) {
+            return Collections.emptyList();
+        }
         list.add(head);
         queue.drainTo(list, size);
         return list;
@@ -90,6 +94,9 @@ public class LocalMigrationBuffer<T> implements MigrationBuffer<T> {
     public List<T> subscribeAll() {
         List<T> list = new ArrayList<>(queue.size());
         T head = subscribe();
+        if (head == null) {
+            return Collections.emptyList();
+        }
         list.add(head);
         queue.drainTo(list);
         return list;

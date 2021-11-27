@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONObject;
 
 /**
  * 任务参数
- * @author ethan zhang
  */
 public class MigrationParameter {
 

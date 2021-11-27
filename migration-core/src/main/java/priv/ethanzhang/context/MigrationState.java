@@ -2,7 +2,6 @@ package priv.ethanzhang.context;
 
 /**
  * 任务状态
- * @author ethan zhang
  */
 public enum MigrationState {
 
@@ -25,10 +24,6 @@ public enum MigrationState {
     /**
      * 失败
      */
-    FAILED,
-    /**
-     * 淘汰
-     */
-    EVICTED
+    FAILED
 
 }

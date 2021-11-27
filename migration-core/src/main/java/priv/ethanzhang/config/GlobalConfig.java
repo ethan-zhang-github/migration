@@ -3,21 +3,15 @@ package priv.ethanzhang.config;
 import lombok.Getter;
 import lombok.Setter;
 
-@Getter
-@Setter
-public class GlobalConfig {
+public interface GlobalConfig {
 
-    public static final GlobalConfig INSTANCE = new GlobalConfig();
-
-    private GlobalConfig() {}
-
-    private LocalMigrationTaskManagerConfig localMigrationTaskManagerConfig = new LocalMigrationTaskManagerConfig();
+    LocalRegistry LOCAL_REGISTRY = new LocalRegistry();
 
     @Getter
     @Setter
-    public static class LocalMigrationTaskManagerConfig {
+    class LocalRegistry {
 
-        private LocalMigrationTaskManagerConfig() {}
+        private LocalRegistry() {}
 
         private int initialCapacity = 16;
 

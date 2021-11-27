@@ -1,7 +1,10 @@
 package priv.ethanzhang.manager;
 
 import com.google.common.eventbus.EventBus;
+import com.google.common.eventbus.Subscribe;
 import lombok.extern.slf4j.Slf4j;
+import priv.ethanzhang.event.MigrationTaskShutdownEvent;
+import priv.ethanzhang.event.MigrationTaskStartedEvent;
 import priv.ethanzhang.task.MigrationTask;
 
 import java.util.Map;
@@ -27,7 +30,7 @@ public class LocalMigrationTaskManager implements MigrationTaskManager {
     public void initialize() {
         registry = new InMemoryMigrationTaskRegistry();
         bus = new EventBus(LocalMigrationTaskManager.class.getName());
-        bus.register(new Subscriber());
+        bus.register(new Subscriber(registry));
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutDown));
     }
 
@@ -35,8 +38,8 @@ public class LocalMigrationTaskManager implements MigrationTaskManager {
     public void shutDown() {
         Map<String, MigrationTask<?, ?>> migrationTaskMap = registry.getAll();
         migrationTaskMap.forEach(((taskId, task) -> {
-            task.stop();
-            log.warn("task [{}] has been stopped because local migration task manager has been shut down!", taskId);
+            task.shutDown();
+            log.warn("task [{}] has been shut down because local migration task manager has been shut down!", taskId);
         }));
         registry.clear();
     }
@@ -48,7 +51,23 @@ public class LocalMigrationTaskManager implements MigrationTaskManager {
 
     private static class Subscriber {
 
+        private final MigrationTaskRegistry registry;
 
+        private Subscriber(MigrationTaskRegistry registry) {
+            this.registry = registry;
+        }
+
+        @SuppressWarnings("unused")
+        @Subscribe
+        public void subscribeMigrationTaskStartedEvent(MigrationTaskStartedEvent event) {
+            registry.register(event.getTask());
+        }
+
+        @SuppressWarnings("unused")
+        @Subscribe
+        public void subscribeMigrationTaskShutdownEvent(MigrationTaskShutdownEvent event) {
+            registry.unregister(event.getTask());
+        }
 
     }
 
