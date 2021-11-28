@@ -20,9 +20,15 @@ public interface MigrationContext<I, O> {
 
     long getReadCount();
 
+    void incrReadCount(long count);
+
     long getProcessedCount();
 
+    void incrProcessedCount(long count);
+
     long getWrittenCount();
+
+    void incrWrittenCount(long count);
 
     MigrationState getReaderState();
 

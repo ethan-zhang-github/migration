@@ -1,5 +1,6 @@
 package priv.ethanzhang.buffer;
 
+import com.google.common.util.concurrent.Monitor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -10,12 +11,19 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 本地缓冲区（基于阻塞式队列）
+ * @param <T> 数据类型
+ */
 @Slf4j
 public class LocalMigrationBuffer<T> implements MigrationBuffer<T> {
 
     private final int capacity;
 
     private final BlockingQueue<T> queue;
+
+    @SuppressWarnings("all")
+    private final Monitor monitor = new Monitor();
 
     public LocalMigrationBuffer(int capacity) {
         this.capacity = capacity;
@@ -38,68 +46,84 @@ public class LocalMigrationBuffer<T> implements MigrationBuffer<T> {
     }
 
     @Override
-    public void publish(T data) {
-        Thread currentThread = Thread.currentThread();
+    public boolean tryProduce(T data, long timeout, TimeUnit timeUnit) {
         try {
-            while (!currentThread.isInterrupted()) {
-                if (queue.offer(data, 1, TimeUnit.MINUTES)) {
-                    return;
-                } else {
-                    // TODO publish
-                    Thread.yield();
-                }
-            }
+            return queue.offer(data, timeout, timeUnit);
         } catch (InterruptedException e) {
-            currentThread.interrupt();
+            Thread.currentThread().interrupt();
+            return false;
         }
     }
 
     @Override
-    public void publishBatch(Collection<T> data) {
-        data.forEach(this::publish);
+    public void produce(T data) {
+        try {
+            queue.put(data);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
+    @SuppressWarnings("all")
     @Override
-    public T subscribe() {
-        Thread currentThread = Thread.currentThread();
+    public boolean tryProduce(Collection<T> data, long timeout, TimeUnit timeUnit) {
+        boolean acquired = false;
         try {
-            while (!currentThread.isInterrupted()) {
-                T poll = queue.poll(1, TimeUnit.MINUTES);
-                if (poll != null) {
-                    return poll;
-                } else {
-                    // TODO publish
-                    Thread.yield();
+            acquired = monitor.enterWhen(new Monitor.Guard(monitor) {
+                @Override
+                public boolean isSatisfied() {
+                    return queue.size() + data.size() <= capacity;
                 }
+            }, timeout, timeUnit);
+            if (acquired) {
+                for (T t : data) {
+                    queue.put(t);
+                }
+                return true;
+            } else {
+                return false;
             }
         } catch (InterruptedException e) {
-            currentThread.interrupt();
+            Thread.currentThread().interrupt();
+            return false;
+        } finally {
+            if (acquired) {
+                monitor.leave();
+            }
         }
-        return null;
     }
 
     @Override
-    public List<T> subscribeBatch(int size) {
-        List<T> list = new ArrayList<>(queue.size());
-        T head = subscribe();
+    public T consume() {
+        try {
+            return queue.take();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
+    }
+
+    @Override
+    public T tryConsume(long timeout, TimeUnit timeUnit) {
+        try {
+            return queue.poll(timeout, timeUnit);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
+    }
+
+    @Override
+    public List<T> consumeIfPossible(int maxSize) {
+        T head = queue.poll();
         if (head == null) {
             return Collections.emptyList();
         }
+        List<T> list = new ArrayList<>(maxSize);
         list.add(head);
-        queue.drainTo(list, size);
+        queue.drainTo(list, maxSize - 1);
         return list;
     }
 
-    @Override
-    public List<T> subscribeAll() {
-        List<T> list = new ArrayList<>(queue.size());
-        T head = subscribe();
-        if (head == null) {
-            return Collections.emptyList();
-        }
-        list.add(head);
-        queue.drainTo(list);
-        return list;
-    }
 
 }

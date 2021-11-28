@@ -11,7 +11,6 @@ import java.util.Map;
 
 /**
  * 本地任务管理器
- * @author ethan zhang
  */
 @Slf4j
 public class LocalMigrationTaskManager implements MigrationTaskManager {

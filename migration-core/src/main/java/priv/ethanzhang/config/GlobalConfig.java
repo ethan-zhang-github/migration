@@ -7,6 +7,34 @@ public interface GlobalConfig {
 
     LocalRegistry LOCAL_REGISTRY = new LocalRegistry();
 
+    Reader READER = new Reader();
+
+    Processor PROCESSOR = new Processor();
+
+    @Getter
+    @Setter
+    class Reader {
+
+        private Reader() {}
+
+        private int produceRetryTimes = 5;
+
+        private int produceWaitSeconds = 5;
+
+    }
+
+    @Getter
+    @Setter
+    class Processor {
+
+        private Processor() {}
+
+        private int produceRetryTimes = 5;
+
+        private int produceWaitSeconds = 5;
+
+    }
+
     @Getter
     @Setter
     class LocalRegistry {

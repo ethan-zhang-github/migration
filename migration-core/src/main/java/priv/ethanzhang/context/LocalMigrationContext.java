@@ -55,13 +55,28 @@ public class LocalMigrationContext<I, O> implements MigrationContext<I, O> {
     }
 
     @Override
+    public void incrReadCount(long count) {
+        readerCounter.add(count);
+    }
+
+    @Override
     public long getProcessedCount() {
         return processorCounter.longValue();
     }
 
     @Override
+    public void incrProcessedCount(long count) {
+        processorCounter.add(count);
+    }
+
+    @Override
     public long getWrittenCount() {
         return writerCounter.longValue();
+    }
+
+    @Override
+    public void incrWrittenCount(long count) {
+        writerCounter.add(count);
     }
 
     @Override

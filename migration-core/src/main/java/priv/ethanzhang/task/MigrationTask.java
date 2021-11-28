@@ -13,6 +13,11 @@ import priv.ethanzhang.processor.MigrationProcessor;
 import priv.ethanzhang.reader.MigrationReader;
 import priv.ethanzhang.writer.MigrationWriter;
 
+/**
+ * 任务
+ * @param <I> 输入类型
+ * @param <O> 输出类型
+ */
 @Getter
 @Setter(AccessLevel.PACKAGE)
 public class MigrationTask<I, O> {
@@ -27,21 +32,24 @@ public class MigrationTask<I, O> {
 
     private MigrationContext<I, O> context;
 
-    private MigrationTaskExecutor executor;
+    private MigrationTaskExecutor<I, O> executor;
 
     private MigrationTaskManager manager;
 
     MigrationTask() {}
 
     public void start() {
+        executor.execute(this);
         manager.publishEvent(new MigrationTaskStartedEvent(this));
     }
 
     public void stop() {
+        executor.stop(this);
         manager.publishEvent(new MigrationTaskStoppedEvent(this));
     }
 
     public void shutDown() {
+        executor.shutDown(this);
         manager.publishEvent(new MigrationTaskShutdownEvent(this));
     }
 

@@ -12,10 +12,10 @@ public abstract class PartitionedMigrationWriter<O> implements MigrationWriter<O
     }
 
     @Override
-    public void write(MigrationContext<?, O> context, MigrationChunk<O> output) {
-        output.partition(size).forEach(i -> writeInternal(context, i));
+    public int write(MigrationContext<?, O> context, MigrationChunk<O> output) {
+        return output.partition(size).stream().mapToInt(i -> writeInternal(context, i)).sum();
     }
 
-    protected abstract void writeInternal(MigrationContext<?, O> context, MigrationChunk<O> output);
+    protected abstract int writeInternal(MigrationContext<?, O> context, MigrationChunk<O> output);
 
 }

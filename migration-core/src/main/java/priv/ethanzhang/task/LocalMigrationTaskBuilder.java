@@ -40,7 +40,7 @@ public class LocalMigrationTaskBuilder<I, O> extends AbstractMigrationTaskBuilde
                 .writeBuffer(new LocalMigrationBuffer<>(writeBufferSize))
                 .build();
         task.setContext(context);
-        task.setExecutor(new LocalMigrationTaskExecutor(executor));
+        task.setExecutor(new LocalMigrationTaskExecutor<>(executor));
         task.setManager(LocalMigrationTaskManager.INSTANCE);
     }
 

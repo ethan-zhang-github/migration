@@ -2,7 +2,12 @@ package priv.ethanzhang.buffer;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+/**
+ * 数据缓冲区
+ * @param <T> 数据类型
+ */
 public interface MigrationBuffer<T> {
 
     boolean isEmpty();
@@ -11,14 +16,16 @@ public interface MigrationBuffer<T> {
 
     int size();
 
-    void publish(T data);
+    boolean tryProduce(T data, long timeout, TimeUnit timeUnit);
 
-    void publishBatch(Collection<T> data);
+    void produce(T data);
 
-    T subscribe();
+    boolean tryProduce(Collection<T> data, long timeout, TimeUnit timeUnit);
 
-    List<T> subscribeBatch(int size);
+    T consume();
 
-    List<T> subscribeAll();
+    T tryConsume(long timeout, TimeUnit timeUnit);
+
+    List<T> consumeIfPossible(int maxsize);
 
 }

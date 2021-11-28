@@ -3,13 +3,10 @@ package priv.ethanzhang.context;
 import com.google.common.collect.Lists;
 import org.apache.commons.collections4.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
-public abstract class MigrationChunk<T> {
+public abstract class MigrationChunk<T> implements Iterable<T> {
 
     private MigrationChunk() {}
 
@@ -55,6 +52,12 @@ public abstract class MigrationChunk<T> {
             return new ArrayList<>(data);
         }
 
+        @SuppressWarnings("all")
+        @Override
+        public Iterator<T> iterator() {
+            return data.iterator();
+        }
+
     }
 
     private static class EmptyMigrationChunk<T> extends MigrationChunk<T> {
@@ -77,6 +80,12 @@ public abstract class MigrationChunk<T> {
         @Override
         public List<T> toList() {
             return Collections.emptyList();
+        }
+
+        @SuppressWarnings("all")
+        @Override
+        public Iterator<T> iterator() {
+            return Collections.emptyIterator();
         }
 
     }

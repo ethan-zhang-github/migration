@@ -10,7 +10,7 @@ import java.time.Duration;
 import java.util.Map;
 
 /**
- * 任务注册表（基于本地内存的实现）
+ * 任务注册表（基于内存的实现）
  */
 class InMemoryMigrationTaskRegistry implements MigrationTaskRegistry {
 
