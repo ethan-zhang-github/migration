@@ -7,6 +7,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
+/**
+ * 分页读取
+ * @param <I> 读取类型
+ */
 public abstract class PageableMigrationReader<I> implements MigrationReader<I> {
 
     private final AtomicLong page;

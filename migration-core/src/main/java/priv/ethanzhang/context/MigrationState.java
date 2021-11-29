@@ -8,22 +8,49 @@ public enum MigrationState {
     /**
      * 创建未运行
      */
-    NEW,
+    NEW {
+        @Override
+        public boolean isFinalState() {
+            return false;
+        }
+    },
     /**
      * 运行中
      */
-    RUNNING,
+    RUNNING {
+        @Override
+        public boolean isFinalState() {
+            return false;
+        }
+    },
     /**
      * 暂停
      */
-    STOPPING,
+    STOPPING {
+        @Override
+        public boolean isFinalState() {
+            return false;
+        }
+    },
     /**
      * 终止
      */
-    TERMINATED,
+    TERMINATED {
+        @Override
+        public boolean isFinalState() {
+            return true;
+        }
+    },
     /**
      * 失败
      */
-    FAILED
+    FAILED {
+        @Override
+        public boolean isFinalState() {
+            return true;
+        }
+    };
+
+    public abstract boolean isFinalState();
 
 }

@@ -14,6 +14,9 @@ public class MigrationStateHolder {
 
     public void transfer(MigrationState target) {
         MigrationState origin = state.get();
+        if (origin == target) {
+            return;
+        }
         switch (origin) {
             case NEW:
                 if (target != MigrationState.RUNNING) {

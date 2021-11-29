@@ -5,6 +5,9 @@ import priv.ethanzhang.processor.MigrationProcessor;
 import priv.ethanzhang.reader.MigrationReader;
 import priv.ethanzhang.writer.MigrationWriter;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public abstract class AbstractMigrationTaskBuilder<I, O> {
 
     protected String taskId;
@@ -16,6 +19,8 @@ public abstract class AbstractMigrationTaskBuilder<I, O> {
     protected MigrationWriter<O> writer;
 
     protected MigrationParameter parameter;
+
+    protected List<MigrationTaskListener> listeners = new LinkedList<>();
 
     public AbstractMigrationTaskBuilder<I, O> taskId(String taskId) {
         this.taskId = taskId;
@@ -42,12 +47,18 @@ public abstract class AbstractMigrationTaskBuilder<I, O> {
         return this;
     }
 
+    public AbstractMigrationTaskBuilder<I, O> addListener(MigrationTaskListener listener) {
+        this.listeners.add(listener);
+        return this;
+    }
+
     public MigrationTask<I, O> build() {
         MigrationTask<I, O> task = new MigrationTask<>();
         task.setTaskId(taskId);
         task.setReader(reader);
         task.setProcessor(processor);
         task.setWriter(writer);
+        task.setListeners(listeners);
         customBuild(task);
         return task;
     }

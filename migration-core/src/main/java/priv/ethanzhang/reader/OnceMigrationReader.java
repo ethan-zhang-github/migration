@@ -5,6 +5,10 @@ import priv.ethanzhang.context.MigrationContext;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
+/**
+ * 一次性读取
+ * @param <I> 读取类型
+ */
 public abstract class OnceMigrationReader<I> implements MigrationReader<I> {
 
     private final AtomicBoolean mark = new AtomicBoolean(false);

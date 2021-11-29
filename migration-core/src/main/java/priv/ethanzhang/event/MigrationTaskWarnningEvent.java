@@ -3,12 +3,15 @@ package priv.ethanzhang.event;
 import lombok.Getter;
 import priv.ethanzhang.task.MigrationTask;
 
+/**
+ * 任务警告事件
+ */
 @Getter
-public class MigrationTaskWarnEvent extends MigrationTaskLifecycleEvent {
+public class MigrationTaskWarnningEvent extends MigrationTaskLifecycleEvent {
 
     private final Cause cause;
 
-    public MigrationTaskWarnEvent(MigrationTask<?, ?> task, Cause cause) {
+    public MigrationTaskWarnningEvent(MigrationTask<?, ?> task, Cause cause) {
         super(task);
         this.cause = cause;
     }

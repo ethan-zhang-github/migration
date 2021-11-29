@@ -9,10 +9,19 @@ import priv.ethanzhang.task.MigrationTask;
  */
 public interface MigrationTaskExecutor<I, O> {
 
+    /**
+     * 执行任务
+     */
     void execute(MigrationTask<I, O> task);
 
+    /**
+     * 暂停任务
+     */
     void stop(MigrationTask<I, O> task);
 
+    /**
+     * 终止任务
+     */
     void shutDown(MigrationTask<I, O> task);
 
 }

@@ -3,6 +3,10 @@ package priv.ethanzhang.reader;
 import priv.ethanzhang.context.MigrationChunk;
 import priv.ethanzhang.context.MigrationContext;
 
+/**
+ * 迭代读取
+ * @param <I> 读取类型
+ */
 public abstract class IterableMigrationReader<I> implements MigrationReader<I> {
 
     @Override
