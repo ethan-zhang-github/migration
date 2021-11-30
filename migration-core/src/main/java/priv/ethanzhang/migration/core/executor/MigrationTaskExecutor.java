@@ -12,7 +12,7 @@ public interface MigrationTaskExecutor<I, O> {
     /**
      * 执行任务
      */
-    void execute(MigrationTask<I, O> task);
+    void start(MigrationTask<I, O> task);
 
     /**
      * 暂停任务

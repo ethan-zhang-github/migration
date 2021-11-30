@@ -13,6 +13,21 @@ public enum MigrationState {
         public boolean isFinalState() {
             return false;
         }
+
+        @Override
+        public boolean canRun() {
+            return true;
+        }
+
+        @Override
+        public boolean canStop() {
+            return false;
+        }
+
+        @Override
+        public boolean canShutdown() {
+            return false;
+        }
     },
     /**
      * 运行中
@@ -21,6 +36,21 @@ public enum MigrationState {
         @Override
         public boolean isFinalState() {
             return false;
+        }
+
+        @Override
+        public boolean canRun() {
+            return false;
+        }
+
+        @Override
+        public boolean canStop() {
+            return true;
+        }
+
+        @Override
+        public boolean canShutdown() {
+            return true;
         }
     },
     /**
@@ -31,6 +61,21 @@ public enum MigrationState {
         public boolean isFinalState() {
             return false;
         }
+
+        @Override
+        public boolean canRun() {
+            return true;
+        }
+
+        @Override
+        public boolean canStop() {
+            return false;
+        }
+
+        @Override
+        public boolean canShutdown() {
+            return true;
+        }
     },
     /**
      * 终止
@@ -39,6 +84,21 @@ public enum MigrationState {
         @Override
         public boolean isFinalState() {
             return true;
+        }
+
+        @Override
+        public boolean canRun() {
+            return false;
+        }
+
+        @Override
+        public boolean canStop() {
+            return false;
+        }
+
+        @Override
+        public boolean canShutdown() {
+            return false;
         }
     },
     /**
@@ -49,8 +109,29 @@ public enum MigrationState {
         public boolean isFinalState() {
             return true;
         }
+
+        @Override
+        public boolean canRun() {
+            return false;
+        }
+
+        @Override
+        public boolean canStop() {
+            return false;
+        }
+
+        @Override
+        public boolean canShutdown() {
+            return false;
+        }
     };
 
     public abstract boolean isFinalState();
+
+    public abstract boolean canRun();
+
+    public abstract boolean canStop();
+
+    public abstract boolean canShutdown();
 
 }

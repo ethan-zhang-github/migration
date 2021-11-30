@@ -40,7 +40,7 @@ public class MigrationTask<I, O> {
     MigrationTask() {}
 
     public void start() {
-        executor.execute(this);
+        executor.start(this);
     }
 
     public void stop() {

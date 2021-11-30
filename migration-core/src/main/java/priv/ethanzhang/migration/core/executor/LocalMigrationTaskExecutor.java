@@ -22,6 +22,7 @@ import priv.ethanzhang.migration.core.task.MigrationTask;
 import priv.ethanzhang.migration.core.writer.MigrationWriter;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -48,10 +49,9 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
     }
 
     @Override
-    protected void executeReader(MigrationTask<I, O> task) {
-        MigrationContext<I, O> context = task.getContext();
-        context.setReaderState(RUNNING);
+    protected void startReader(MigrationTask<I, O> task) {
         readerTask =  executor.submit(() -> {
+            MigrationContext<I, O> context = task.getContext();
             MigrationReader<I> reader = task.getReader();
             MigrationBuffer<I> readBuffer = context.getReadBuffer();
             MigrationConfigAttributes attributes = MigrationConfigAttributes.fromClass(reader.getClass());
@@ -97,10 +97,9 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
     }
 
     @Override
-    protected void executeProcessor(MigrationTask<I, O> task) {
-        MigrationContext<I, O> context = task.getContext();
-        context.setProcessorState(RUNNING);
+    protected void startProcessor(MigrationTask<I, O> task) {
         processorTask = executor.submit(() -> {
+            MigrationContext<I, O> context = task.getContext();
             MigrationProcessor<I, O> processor = task.getProcessor();
             MigrationBuffer<I> readBuffer = context.getReadBuffer();
             MigrationBuffer<O> writeBuffer = context.getWriteBuffer();
@@ -151,10 +150,9 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
     }
 
     @Override
-    protected void executeWriter(MigrationTask<I, O> task) {
-        MigrationContext<I, O> context = task.getContext();
-        context.setWriterState(RUNNING);
+    protected void startWriter(MigrationTask<I, O> task) {
         writerTask = executor.submit(() -> {
+            MigrationContext<I, O> context = task.getContext();
             MigrationWriter<O> writer = task.getWriter();
             MigrationBuffer<O> writeBuffer = context.getWriteBuffer();
             MigrationConfigAttributes attributes = MigrationConfigAttributes.fromClass(writer.getClass());
@@ -189,54 +187,18 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
     }
 
     @Override
-    protected void stopReader(MigrationTask<I, O> task) {
-        MigrationContext<I, O> context = task.getContext();
-        if (readerTask != null && context.getReaderState() == RUNNING) {
-            context.setReaderState(STOPPING);
-        }
-    }
-
-    @Override
-    protected void stopProcessor(MigrationTask<I, O> task) {
-        MigrationContext<I, O> context = task.getContext();
-        if (processorTask != null && context.getProcessorState() == RUNNING) {
-            context.setProcessorState(STOPPING);
-        }
-    }
-
-    @Override
-    protected void stopWriter(MigrationTask<I, O> task) {
-        MigrationContext<I, O> context = task.getContext();
-        if (writerTask != null && context.getWriterState() == RUNNING) {
-            context.setWriterState(STOPPING);
-        }
-    }
-
-    @Override
     protected void shutdownReader(MigrationTask<I, O> task) {
-        MigrationContext<I, O> context = task.getContext();
-        if (readerTask != null) {
-            context.setReaderState(TERMINATED);
-            readerTask.cancel(true);
-        }
+        Optional.ofNullable(readerTask).ifPresent(t -> t.cancel(true));
     }
 
     @Override
     protected void shutdownProcessor(MigrationTask<I, O> task) {
-        MigrationContext<I, O> context = task.getContext();
-        if (processorTask != null) {
-            context.setProcessorState(TERMINATED);
-            processorTask.cancel(true);
-        }
+        Optional.ofNullable(processorTask).ifPresent(t -> t.cancel(true));
     }
 
     @Override
     protected void shutdownWriter(MigrationTask<I, O> task) {
-        MigrationContext<I, O> context = task.getContext();
-        if (writerTask != null) {
-            context.setWriterState(TERMINATED);
-            writerTask.cancel(true);
-        }
+        Optional.ofNullable(writerTask).ifPresent(t -> t.cancel(true));
     }
 
 }
