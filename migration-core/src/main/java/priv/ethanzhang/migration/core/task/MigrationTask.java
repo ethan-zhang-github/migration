@@ -10,6 +10,7 @@ import priv.ethanzhang.migration.core.executor.MigrationTaskExecutor;
 import priv.ethanzhang.migration.core.manager.MigrationTaskManager;
 import priv.ethanzhang.migration.core.processor.MigrationProcessor;
 import priv.ethanzhang.migration.core.reader.MigrationReader;
+import priv.ethanzhang.migration.core.reporter.MigrationTaskReporter;
 import priv.ethanzhang.migration.core.writer.MigrationWriter;
 
 /**
@@ -36,6 +37,8 @@ public class MigrationTask<I, O> {
     private MigrationTaskManager manager;
 
     private MigrationEventDispatcher dispatcher;
+
+    private MigrationTaskReporter reporter;
 
     MigrationTask() {}
 

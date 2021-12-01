@@ -16,28 +16,19 @@ public class LocalMigrationTaskManager implements MigrationTaskManager {
 
     private MigrationTaskRegistry registry;
 
+    private LocalReporterScheduler reporterScheduler;
+
     private LocalMigrationTaskManager() {
         initialize();
     }
 
     @Override
     public void initialize() {
-        registry = new InMemoryMigrationTaskRegistry();
-        LocalMigrationEventDispatcher.INSTANCE.addSubsriber((MigrationEventSubscriber<MigrationTaskLifecycleEvent>) event -> {
-            MigrationTask<?, ?> task = event.getTask();
-            if (event instanceof MigrationTaskStartedEvent) {
-                registry.register(task);
-            }
-            if (event instanceof MigrationTaskShutdownEvent) {
-                task.getDispatcher().clearEventStream(task.getTaskId());
-                registry.unregister(task);
-            }
-            if (event instanceof MigrationTaskFinishedEvent) {
-                task.getDispatcher().clearEventStream(task.getTaskId());
-                registry.unregister(task);
-            }
-        });
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutDown));
+        registry = new InMemoryMigrationTaskRegistry();
+        reporterScheduler = new LocalReporterScheduler(registry);
+        reporterScheduler.startAsync();
+        LocalMigrationEventDispatcher.INSTANCE.addSubsriber(new LocalMigrationTaskManagerSubscriber());
     }
 
     @Override
@@ -46,9 +37,38 @@ public class LocalMigrationTaskManager implements MigrationTaskManager {
         migrationTaskMap.forEach(((taskId, task) -> {
             task.shutDown();
             task.getDispatcher().clearEventStream(taskId);
-            log.warn("task [{}] has been shut down because local migration task manager has been shut down!", taskId);
+            log.warn("Task [{}] has been shut down because local migration task manager has been shut down!", taskId);
         }));
         registry.clear();
+        reporterScheduler.stopAsync();
+    }
+
+    private class LocalMigrationTaskManagerSubscriber implements MigrationEventSubscriber<MigrationTaskLifecycleEvent> {
+
+        @Override
+        public void subscribe(MigrationTaskLifecycleEvent event) {
+            MigrationTask<?, ?> task = event.getTask();
+            if (event instanceof MigrationTaskStartedEvent) {
+                log.info("Task [{}] started...", task.getTaskId());
+                registry.register(task);
+            }
+            if (event instanceof MigrationTaskShutdownEvent) {
+                log.info("Task [{}] has been shutdown...", task.getTaskId());
+                task.getDispatcher().clearEventStream(task.getTaskId());
+                registry.unregister(task);
+            }
+            if (event instanceof MigrationTaskFinishedEvent) {
+                log.info("Task [{}] finished...", task.getTaskId());
+                task.getDispatcher().clearEventStream(task.getTaskId());
+                registry.unregister(task);
+            }
+            if (event instanceof MigrationTaskFailedEvent) {
+                log.error("Task [{}] failed...", task.getTaskId());
+                task.getDispatcher().clearEventStream(task.getTaskId());
+                registry.unregister(task);
+            }
+        }
+
     }
 
 }

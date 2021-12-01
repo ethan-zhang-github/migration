@@ -4,6 +4,10 @@ import lombok.Builder;
 import priv.ethanzhang.migration.core.buffer.MigrationBuffer;
 import priv.ethanzhang.migration.core.task.MigrationTask;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -33,6 +37,14 @@ public class LocalMigrationContext<I, O> implements MigrationContext<I, O> {
     private final MigrationStateHolder processorState = new MigrationStateHolder();
 
     private final MigrationStateHolder writerState = new MigrationStateHolder();
+
+    private final AtomicLong totalCounter = new AtomicLong();
+
+    private final AtomicReference<Instant> startTimestamap = new AtomicReference<>();
+
+    private final AtomicReference<Instant> finishTimestamap = new AtomicReference<>();
+
+    private Duration reportPeriod;
 
     @Override
     public MigrationParameter getParameter() {
@@ -112,6 +124,57 @@ public class LocalMigrationContext<I, O> implements MigrationContext<I, O> {
     @Override
     public void setWriterState(MigrationState state) {
         writerState.transfer(state);
+    }
+
+    @Override
+    public long getTotal() {
+        return totalCounter.get();
+    }
+
+    @Override
+    public void setTotal(long total) {
+        totalCounter.set(total);
+    }
+
+    @Override
+    public Instant getStartTimestamp() {
+        return startTimestamap.get();
+    }
+
+    @Override
+    public void setStartTimestamp(Instant instant) {
+        startTimestamap.compareAndSet(null, instant);
+    }
+
+    @Override
+    public Instant getFinishTimestamp() {
+        return finishTimestamap.get();
+    }
+
+    @Override
+    public void setFinishTimestamp(Instant instant) {
+        finishTimestamap.compareAndSet(null, instant);
+    }
+
+    @Override
+    public Duration getCost() {
+        if (startTimestamap.get() == null) {
+            return Duration.ZERO;
+        }
+        if (finishTimestamap.get() == null) {
+            return Duration.between(startTimestamap.get(), Instant.now());
+        }
+        return Duration.between(startTimestamap.get(), finishTimestamap.get());
+    }
+
+    @Override
+    public void setReportPeriod(Duration reportPeriod) {
+        this.reportPeriod = reportPeriod;
+    }
+
+    @Override
+    public Duration getReportPeriod() {
+        return reportPeriod;
     }
 
 }

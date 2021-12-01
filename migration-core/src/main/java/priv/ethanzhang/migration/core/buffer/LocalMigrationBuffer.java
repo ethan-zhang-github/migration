@@ -46,6 +46,11 @@ public class LocalMigrationBuffer<T> implements MigrationBuffer<T> {
     }
 
     @Override
+    public int capacity() {
+        return capacity;
+    }
+
+    @Override
     public boolean tryProduce(T data, long timeout, TimeUnit timeUnit) {
         try {
             return queue.offer(data, timeout, timeUnit);

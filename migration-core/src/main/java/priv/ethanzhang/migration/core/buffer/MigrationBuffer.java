@@ -16,6 +16,8 @@ public interface MigrationBuffer<T> {
 
     int size();
 
+    int capacity();
+
     boolean tryProduce(T data, long timeout, TimeUnit timeUnit);
 
     void produce(T data);

@@ -2,6 +2,7 @@ package priv.ethanzhang.migration.core.task;
 
 import priv.ethanzhang.migration.core.buffer.LocalMigrationBuffer;
 import priv.ethanzhang.migration.core.context.LocalMigrationContext;
+import priv.ethanzhang.migration.core.context.MigrationContext;
 import priv.ethanzhang.migration.core.event.LocalMigrationEventDispatcher;
 import priv.ethanzhang.migration.core.executor.LocalMigrationTaskExecutor;
 import priv.ethanzhang.migration.core.manager.LocalMigrationTaskManager;
@@ -34,16 +35,19 @@ public class LocalMigrationTaskBuilder<I, O> extends AbstractMigrationTaskBuilde
 
     @Override
     protected void customBuild(MigrationTask<I, O> task) {
-        LocalMigrationContext<I, O> context = LocalMigrationContext.<I, O>builder()
+        task.setExecutor(new LocalMigrationTaskExecutor<>(executor));
+        task.setManager(LocalMigrationTaskManager.INSTANCE);
+        task.setDispatcher(LocalMigrationEventDispatcher.INSTANCE);
+    }
+
+    @Override
+    protected MigrationContext<I, O> buildContext(MigrationTask<I, O> task) {
+        return LocalMigrationContext.<I, O>builder()
                 .task(task)
                 .parameter(parameter)
                 .readBuffer(new LocalMigrationBuffer<>(readBufferSize))
                 .writeBuffer(new LocalMigrationBuffer<>(writeBufferSize))
                 .build();
-        task.setContext(context);
-        task.setExecutor(new LocalMigrationTaskExecutor<>(executor));
-        task.setManager(LocalMigrationTaskManager.INSTANCE);
-        task.setDispatcher(LocalMigrationEventDispatcher.INSTANCE);
     }
 
 }
