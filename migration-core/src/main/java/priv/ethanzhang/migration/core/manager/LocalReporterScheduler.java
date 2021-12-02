@@ -32,13 +32,19 @@ class LocalReporterScheduler extends AbstractScheduledService {
                 continue;
             }
             if (!timer.containsKey(taskId)) {
-                task.getReporter().report(task);
-                timer.put(taskId, Instant.now());
+                try {
+                    task.getReporter().report(task);
+                } finally {
+                    timer.put(taskId, Instant.now());
+                }
             } else {
                 Instant lastReportTime = timer.get(taskId);
                 if (lastReportTime.plus(context.getReportPeriod()).isBefore(Instant.now())) {
-                    task.getReporter().report(task);
-                    timer.put(taskId, Instant.now());
+                    try {
+                        task.getReporter().report(task);
+                    } finally {
+                        timer.put(taskId, Instant.now());
+                    }
                 }
             }
         }

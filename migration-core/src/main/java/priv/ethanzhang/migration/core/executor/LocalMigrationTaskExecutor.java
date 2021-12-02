@@ -123,7 +123,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                         Thread.yield();
                         continue;
                     } else {
-                        output = processor.process(context, MigrationChunk.ofList(input));
+                        output = processor.process(context, MigrationChunk.of(input));
                     }
                 } catch (Exception e) {
                     Set<Class<? extends Throwable>> interruptFor = attributes.getInterruptFor();
@@ -170,7 +170,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                     if (CollectionUtils.isEmpty(output)) {
                         Thread.yield();
                     } else {
-                        context.incrWrittenCount(writer.write(context, MigrationChunk.ofList(output)));
+                        context.incrWrittenCount(writer.write(context, MigrationChunk.of(output)));
                     }
                 } catch (Exception e) {
                     Set<Class<? extends Throwable>> interruptFor = attributes.getInterruptFor();

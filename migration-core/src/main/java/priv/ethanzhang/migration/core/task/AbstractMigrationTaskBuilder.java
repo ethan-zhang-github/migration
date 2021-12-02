@@ -35,51 +35,6 @@ public abstract class AbstractMigrationTaskBuilder<I, O> {
 
     protected Duration reportPeriod = Duration.ofMinutes(1);
 
-    public AbstractMigrationTaskBuilder<I, O> taskId(String taskId) {
-        this.taskId = taskId;
-        return this;
-    }
-
-    public AbstractMigrationTaskBuilder<I, O> reader(MigrationReader<I> reader) {
-        this.reader = reader;
-        return this;
-    }
-
-    public AbstractMigrationTaskBuilder<I, O> processor(MigrationProcessor<I, O> processor) {
-        this.processor = processor;
-        return this;
-    }
-
-    public AbstractMigrationTaskBuilder<I, O> writer(MigrationWriter<O> writer) {
-        this.writer = writer;
-        return this;
-    }
-
-    public AbstractMigrationTaskBuilder<I, O> parameter(MigrationParameter parameter) {
-        this.parameter = parameter;
-        return this;
-    }
-
-    public AbstractMigrationTaskBuilder<I, O> total(long total) {
-        this.total = total;
-        return this;
-    }
-
-    public AbstractMigrationTaskBuilder<I, O> total(Supplier<Long> totalSupplier) {
-        this.totalSupplier = totalSupplier;
-        return this;
-    }
-
-    public AbstractMigrationTaskBuilder<I, O> addReporter(MigrationTaskReporter reporter) {
-        this.reporters.add(reporter);
-        return this;
-    }
-
-    public AbstractMigrationTaskBuilder<I, O> addReporter(Duration reportPeriod) {
-        this.reportPeriod = reportPeriod;
-        return this;
-    }
-
     public MigrationTask<I, O> build() {
         MigrationTask<I, O> task = new MigrationTask<>();
         task.setTaskId(taskId);

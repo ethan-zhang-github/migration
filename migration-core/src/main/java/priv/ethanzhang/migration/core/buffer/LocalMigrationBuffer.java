@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -27,7 +27,7 @@ public class LocalMigrationBuffer<T> implements MigrationBuffer<T> {
 
     public LocalMigrationBuffer(int capacity) {
         this.capacity = capacity;
-        this.queue = new ArrayBlockingQueue<>(capacity);
+        this.queue = new LinkedBlockingQueue<>(capacity);
     }
 
     @Override

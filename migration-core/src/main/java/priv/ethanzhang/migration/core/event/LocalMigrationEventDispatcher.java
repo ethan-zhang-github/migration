@@ -1,5 +1,6 @@
 package priv.ethanzhang.migration.core.event;
 
+import com.google.common.eventbus.AsyncEventBus;
 import com.google.common.eventbus.EventBus;
 import com.google.common.eventbus.Subscribe;
 import priv.ethanzhang.migration.core.task.MigrationTask;
@@ -10,6 +11,7 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executors;
 
 /**
  * 本地事件分发器
@@ -18,7 +20,7 @@ public class LocalMigrationEventDispatcher implements MigrationEventDispatcher {
 
     public static final LocalMigrationEventDispatcher INSTANCE = new LocalMigrationEventDispatcher();
 
-    private final EventBus eventBus = new EventBus();
+    private final EventBus eventBus = new AsyncEventBus(LocalMigrationEventDispatcher.class.getName(), Executors.newFixedThreadPool(1));
 
     private final ConcurrentMap<String, ConcurrentLinkedDeque<MigrationTaskLifecycleEvent>> eventStream = new ConcurrentHashMap<>();
 

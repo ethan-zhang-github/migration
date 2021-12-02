@@ -50,20 +50,24 @@ public class LocalMigrationTaskManager implements MigrationTaskManager {
             MigrationTask<?, ?> task = event.getTask();
             if (event instanceof MigrationTaskStartedEvent) {
                 log.info("Task [{}] started...", task.getTaskId());
+                task.getReporter().report(task);
                 registry.register(task);
             }
             if (event instanceof MigrationTaskShutdownEvent) {
                 log.info("Task [{}] has been shutdown...", task.getTaskId());
+                task.getReporter().report(task);
                 task.getDispatcher().clearEventStream(task.getTaskId());
                 registry.unregister(task);
             }
             if (event instanceof MigrationTaskFinishedEvent) {
                 log.info("Task [{}] finished...", task.getTaskId());
+                task.getReporter().report(task);
                 task.getDispatcher().clearEventStream(task.getTaskId());
                 registry.unregister(task);
             }
             if (event instanceof MigrationTaskFailedEvent) {
                 log.error("Task [{}] failed...", task.getTaskId());
+                task.getReporter().report(task);
                 task.getDispatcher().clearEventStream(task.getTaskId());
                 registry.unregister(task);
             }

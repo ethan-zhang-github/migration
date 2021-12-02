@@ -2,7 +2,7 @@ package priv.ethanzhang.migration.example.event;
 
 import org.junit.Test;
 import priv.ethanzhang.migration.core.event.*;
-import priv.ethanzhang.migration.core.reader.EasyExcelMigrationReader;
+import priv.ethanzhang.migration.core.reader.EasyExcelReader;
 import priv.ethanzhang.migration.core.reader.MigrationReader;
 import priv.ethanzhang.migration.core.utils.GenericUtil;
 
@@ -22,9 +22,9 @@ public class MyMigrationEventSubscriber implements MigrationEventSubscriber<Migr
         LocalMigrationEventDispatcher.INSTANCE.dispatch(new MigrationTaskFailedEvent(null, null, null));
         LocalMigrationEventDispatcher.INSTANCE.dispatch(new MigrationTaskWarnningEvent(null, null, null));
 
-        EasyExcelMigrationReader<Integer> reader1 = new EasyExcelMigrationReader<Integer>(new File(""), Integer.class) {};
+        EasyExcelReader<Integer> reader1 = new EasyExcelReader<Integer>(new File(""), Integer.class) {};
 
-        EasyExcelMigrationReader<Integer> reader2 = new EasyExcelMigrationReader<>(new File(""), Integer.class);
+        EasyExcelReader<Integer> reader2 = new EasyExcelReader<>(new File(""), Integer.class);
 
         System.out.println(GenericUtil.getInterfaceGenericType(reader1.getClass(), MigrationReader.class, 0));
 

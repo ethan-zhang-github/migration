@@ -31,7 +31,7 @@ public class MigrationConfigAttributes {
             attributes.setInterruptFor(Arrays.stream(annotation.interruptFor()).collect(Collectors.toSet()));
             attributes.setMaxProduceWaitSeconds(annotation.maxProduceWaitSeconds());
             attributes.setMaxProduceRetryTimes(annotation.maxProduceRetryTimes());
-            attributes.setMaxConsumeCount(attributes.getMaxConsumeCount());
+            attributes.setMaxConsumeCount(annotation.maxConsumeCount());
         } else {
             attributes.setInterruptFor(Collections.singleton(Throwable.class));
             if (MigrationReader.class.isAssignableFrom(clazz)) {

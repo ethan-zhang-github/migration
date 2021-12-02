@@ -11,12 +11,12 @@ public class LoggerMigrationTaskReporter implements MigrationTaskReporter {
 
     private LoggerMigrationTaskReporter() {}
 
-    private final Logger logger = LoggerFactory.getLogger(LoggerMigrationTaskReporter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LoggerMigrationTaskReporter.class);
 
     @Override
     public void report(MigrationTask<?, ?> task) {
         MigrationTaskAttributes attributes = MigrationTaskAttributes.of(task);
-        logger.info(attributes.format("\n"));
+        LOGGER.info("\n" + attributes.format("\n"));
     }
 
 }

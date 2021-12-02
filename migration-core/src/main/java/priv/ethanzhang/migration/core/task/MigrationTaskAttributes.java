@@ -1,7 +1,9 @@
 package priv.ethanzhang.migration.core.task;
 
+import priv.ethanzhang.migration.core.context.MigrationParameter;
 import priv.ethanzhang.migration.core.utils.DateTimeFormatters;
 
+import java.time.Instant;
 import java.util.EnumMap;
 
 public class MigrationTaskAttributes {
@@ -48,18 +50,21 @@ public class MigrationTaskAttributes {
         builder.append(String.format("READER_TYPE:[%s]%s", get(AttributeType.READER_TYPE), separator));
         builder.append(String.format("PROCESSOR_TYPE:[%s]%s", get(AttributeType.PROCESSOR_TYPE), separator));
         builder.append(String.format("WRITER_TYPE:[%s]%s", get(AttributeType.WRITER_TYPE), separator));
-        builder.append(String.format("PARAMETER:[%s]%s", get(AttributeType.PARAMETER), separator));
+        MigrationParameter parameter = get(AttributeType.PARAMETER);
+        if (parameter != null) {
+            builder.append(String.format("PARAMETER:[%s]%s", parameter, separator));
+        }
         long total = get(AttributeType.TOTAL);
         if (total > 0) {
             builder.append(String.format("PARAMETER:[%s]%s", total, separator));
         }
-        long readerBufferCapacity = get(AttributeType.READER_BUFFER_CAPACITY);
+        int readerBufferCapacity = get(AttributeType.READER_BUFFER_CAPACITY);
         if (readerBufferCapacity > 0) {
             builder.append(String.format("READER_BUFFER_SIZE:[%s/%s]%s", get(AttributeType.READER_BUFFER_SIZE), readerBufferCapacity, separator));
         } else {
             builder.append(String.format("READER_BUFFER_SIZE:[%s]%s", get(AttributeType.READER_BUFFER_SIZE), separator));
         }
-        long writerBufferCapacity = get(AttributeType.WRITER_BUFFER_CAPACITY);
+        int writerBufferCapacity = get(AttributeType.WRITER_BUFFER_CAPACITY);
         if (writerBufferCapacity > 0) {
             builder.append(String.format("WRITER_BUFFER_SIZE:[%s/%s]%s", get(AttributeType.WRITER_BUFFER_SIZE), writerBufferCapacity, separator));
         } else {
@@ -68,8 +73,14 @@ public class MigrationTaskAttributes {
         builder.append(String.format("READER_STATE:[%s(%s)]%s", get(AttributeType.READER_STATE), get(AttributeType.READ_COUNT), separator));
         builder.append(String.format("PROCESSOR_STATE:[%s(%s)]%s", get(AttributeType.PROCESSOR_STATE), get(AttributeType.PROCESSED_COUNT), separator));
         builder.append(String.format("WRITER_STATE:[%s(%s)]%s", get(AttributeType.WRITER_STATE), get(AttributeType.WRITTEN_COUNT), separator));
-        builder.append(String.format("START_TIME:[%s]%s", DateTimeFormatters.PATTERN_0.formatInstant(get(AttributeType.START_TIME)), separator));
-        builder.append(String.format("FINISH_TIME:[%s]%s", DateTimeFormatters.PATTERN_0.formatInstant(get(AttributeType.FINISH_TIME)), separator));
+        Instant startTime = get(AttributeType.START_TIME);
+        if (startTime != null) {
+            builder.append(String.format("START_TIME:[%s]%s", DateTimeFormatters.PATTERN_0.formatInstant(startTime), separator));
+        }
+        Instant finishTime = get(AttributeType.FINISH_TIME);
+        if (finishTime != null) {
+            builder.append(String.format("FINISH_TIME:[%s]%s", DateTimeFormatters.PATTERN_0.formatInstant(finishTime), separator));
+        }
         builder.append(String.format("COST:[%s]%s", get(AttributeType.COST), separator));
         return builder.toString();
     }
