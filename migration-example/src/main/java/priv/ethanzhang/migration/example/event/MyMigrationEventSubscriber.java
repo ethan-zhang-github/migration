@@ -22,9 +22,9 @@ public class MyMigrationEventSubscriber implements MigrationEventSubscriber<Migr
         LocalMigrationEventDispatcher.INSTANCE.dispatch(new MigrationTaskFailedEvent(null, null, null));
         LocalMigrationEventDispatcher.INSTANCE.dispatch(new MigrationTaskWarnningEvent(null, null, null));
 
-        EasyExcelMigrationReader<Integer> reader1 = new EasyExcelMigrationReader<Integer>(new File("")) {};
+        EasyExcelMigrationReader<Integer> reader1 = new EasyExcelMigrationReader<Integer>(new File(""), Integer.class) {};
 
-        EasyExcelMigrationReader<Integer> reader2 = new EasyExcelMigrationReader<>(new File(""));
+        EasyExcelMigrationReader<Integer> reader2 = new EasyExcelMigrationReader<>(new File(""), Integer.class);
 
         System.out.println(GenericUtil.getInterfaceGenericType(reader1.getClass(), MigrationReader.class, 0));
 

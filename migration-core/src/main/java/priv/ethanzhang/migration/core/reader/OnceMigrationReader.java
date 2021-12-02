@@ -11,16 +11,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public abstract class OnceMigrationReader<I> implements MigrationReader<I> {
 
-    private final AtomicBoolean mark = new AtomicBoolean(false);
+    private final AtomicBoolean mark = new AtomicBoolean();
 
     @Override
     public MigrationChunk<I> read(MigrationContext<I, ?> context) {
-        if (mark.get()) {
-            return MigrationChunk.empty();
+        if (mark.compareAndSet(false, true)) {
+            return readOnce(context);
         }
-        MigrationChunk<I> chunk = readOnce(context);
-        mark.set(true);
-        return chunk;
+        return MigrationChunk.empty();
     }
 
     protected abstract MigrationChunk<I> readOnce(MigrationContext<I, ?> context);

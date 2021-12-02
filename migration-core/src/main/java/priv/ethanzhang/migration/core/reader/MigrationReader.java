@@ -11,4 +11,8 @@ public interface MigrationReader<I> {
 
     MigrationChunk<I> read(MigrationContext<I, ?> context);
 
+    default void initialize(MigrationContext<I, ?> context) {}
+
+    default void destroy(MigrationContext<I, ?> context) {}
+
 }

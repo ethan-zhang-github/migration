@@ -20,6 +20,8 @@ public abstract class MigrationChunk<T> implements Iterable<T> {
 
     public abstract List<T> toList();
 
+    public abstract int size();
+
     @SuppressWarnings("unchecked")
     public static <T> MigrationChunk<T> empty() {
         return (EmptyMigrationChunk<T>) EmptyMigrationChunk.INSTANCE;
@@ -52,6 +54,11 @@ public abstract class MigrationChunk<T> implements Iterable<T> {
             return new ArrayList<>(data);
         }
 
+        @Override
+        public int size() {
+            return data.size();
+        }
+
         @SuppressWarnings("all")
         @Override
         public Iterator<T> iterator() {
@@ -80,6 +87,11 @@ public abstract class MigrationChunk<T> implements Iterable<T> {
         @Override
         public List<T> toList() {
             return Collections.emptyList();
+        }
+
+        @Override
+        public int size() {
+            return 0;
         }
 
         @SuppressWarnings("all")

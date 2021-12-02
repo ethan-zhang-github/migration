@@ -11,4 +11,8 @@ public interface MigrationWriter<O> {
 
     int write(MigrationContext<?, O> context, MigrationChunk<O> output);
 
+    default void initialize(MigrationContext<?, O> context) {}
+
+    default void destroy(MigrationContext<?, O> context) {}
+
 }

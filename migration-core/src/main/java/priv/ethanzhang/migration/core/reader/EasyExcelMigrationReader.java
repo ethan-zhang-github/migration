@@ -10,7 +10,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import priv.ethanzhang.migration.core.context.MigrationChunk;
 import priv.ethanzhang.migration.core.context.MigrationContext;
 import priv.ethanzhang.migration.core.event.MigrationTaskWarnningEvent;
-import priv.ethanzhang.migration.core.utils.GenericUtil;
 
 import java.io.File;
 import java.util.*;
@@ -22,9 +21,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-public class EasyExcelMigrationReader<I> implements MigrationReader<I> {
+public class EasyExcelMigrationReader<I> extends OnceInitializedMigrationReader<I> {
 
     private final File file;
+
+    private final Class<I> clazz;
 
     private Set<Integer> sheetNos;
 
@@ -32,12 +33,11 @@ public class EasyExcelMigrationReader<I> implements MigrationReader<I> {
 
     private final BlockingQueue<I> buffer = new ArrayBlockingQueue<>(1 << 10);
 
-    private final AtomicBoolean initialized = new AtomicBoolean();
-
     private final AtomicBoolean finished = new AtomicBoolean();
 
-    public EasyExcelMigrationReader(File file, int... sheetNos) {
+    public EasyExcelMigrationReader(File file, Class<I> clazz, int... sheetNos) {
         this.file = file;
+        this.clazz = clazz;
         if (sheetNos != null) {
             this.sheetNos = Arrays.stream(sheetNos).boxed().collect(Collectors.toSet());
         }
@@ -45,7 +45,6 @@ public class EasyExcelMigrationReader<I> implements MigrationReader<I> {
 
     @Override
     public MigrationChunk<I> read(MigrationContext<I, ?> context) {
-        initialize(context);
         try {
             while (!finished.get()) {
                 I head = buffer.poll(5, TimeUnit.SECONDS);
@@ -57,23 +56,22 @@ public class EasyExcelMigrationReader<I> implements MigrationReader<I> {
                 }
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            Thread.currentThread().interrupt();
         }
         return MigrationChunk.empty();
     }
 
-    private void initialize(MigrationContext<I, ?> context) {
-        if (initialized.compareAndSet(false, true)) {
-            ExcelReader excelReader = EasyExcel.read(file, GenericUtil.getInterfaceGenericType(this.getClass(), MigrationReader.class, 0), new EasyExcelItemReaderListener(context)).build();
-            List<ReadSheet> needReadSheet;
-            if (CollectionUtils.isEmpty(sheetNos)) {
-                needReadSheet = excelReader.excelExecutor().sheetList();
-            } else {
-                needReadSheet = excelReader.excelExecutor().sheetList().stream().filter(s -> sheetNos.contains(s.getSheetNo())).collect(Collectors.toList());
-            }
-            excelReader.read(needReadSheet);
-            unreadSheetCount.set(needReadSheet.size());
+    @Override
+    protected void initializeInternal(MigrationContext<I, ?> context) {
+        ExcelReader excelReader = EasyExcel.read(file, clazz, new EasyExcelItemReaderListener(context)).build();
+        List<ReadSheet> needReadSheet;
+        if (CollectionUtils.isEmpty(sheetNos)) {
+            needReadSheet = excelReader.excelExecutor().sheetList();
+        } else {
+            needReadSheet = excelReader.excelExecutor().sheetList().stream().filter(s -> sheetNos.contains(s.getSheetNo())).collect(Collectors.toList());
         }
+        excelReader.read(needReadSheet);
+        unreadSheetCount.set(needReadSheet.size());
     }
 
     private class EasyExcelItemReaderListener extends AnalysisEventListener<I> {

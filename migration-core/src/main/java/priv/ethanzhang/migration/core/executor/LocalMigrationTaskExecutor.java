@@ -59,6 +59,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                     .retryIfResult(Boolean.FALSE::equals)
                     .withStopStrategy(StopStrategies.stopAfterAttempt(attributes.getMaxProduceRetryTimes()))
                     .build();
+            reader.initialize(context);
             while (context.getReaderState() == RUNNING) {
                 if (Thread.currentThread().isInterrupted()) {
                     context.setReaderState(TERMINATED);
@@ -71,6 +72,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                     Set<Class<? extends Throwable>> interruptFor = attributes.getInterruptFor();
                     if (interruptFor.stream().anyMatch(t -> t.isAssignableFrom(e.getClass()))) {
                         context.setReaderState(FAILED);
+                        reader.destroy(context);
                         task.getDispatcher().dispatch(new MigrationTaskFailedEvent(task, MigrationTaskFailedEvent.Cause.READER_FAILED, e));
                         return;
                     } else {
@@ -80,6 +82,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                 }
                 if (chunk.isEmpty()) {
                     context.setReaderState(TERMINATED);
+                    reader.destroy(context);
                     return;
                 } else {
                     for (I i : chunk) {
@@ -156,6 +159,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
             MigrationWriter<O> writer = task.getWriter();
             MigrationBuffer<O> writeBuffer = context.getWriteBuffer();
             MigrationConfigAttributes attributes = MigrationConfigAttributes.fromClass(writer.getClass());
+            writer.initialize(context);
             while (context.getProcessorState() == RUNNING || !writeBuffer.isEmpty()) {
                 if (Thread.currentThread().isInterrupted()) {
                     context.setWriterState(TERMINATED);
@@ -172,6 +176,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                     Set<Class<? extends Throwable>> interruptFor = attributes.getInterruptFor();
                     if (interruptFor.stream().anyMatch(t -> t.isAssignableFrom(e.getClass()))) {
                         context.setWriterState(FAILED);
+                        writer.destroy(context);
                         task.getDispatcher().dispatch(new MigrationTaskFailedEvent(task, MigrationTaskFailedEvent.Cause.WRITER_FAILED, e));
                         return;
                     } else {
@@ -180,7 +185,10 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                 }
             }
             context.setWriterState(context.getProcessorState());
-            if (context.getReaderState() == TERMINATED && context.getProcessorState() == TERMINATED && context.getWriterState() == TERMINATED) {
+            if (context.getWriterState() == TERMINATED || context.getWriterState() == FAILED) {
+                writer.destroy(context);
+            }
+            if (context.isTerminated()) {
                 task.getDispatcher().dispatch(new MigrationTaskFinishedEvent(task));
             }
         });
