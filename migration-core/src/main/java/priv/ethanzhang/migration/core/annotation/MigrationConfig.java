@@ -7,7 +7,9 @@ import java.lang.annotation.*;
 @Documented
 public @interface MigrationConfig {
 
-    Class<? extends Throwable>[] interruptFor() default {};
+    Class<? extends Throwable>[] interruptFor() default { Throwable.class };
+
+    Class<? extends Throwable>[] ignoreFor() default {};
 
     int maxProduceWaitSeconds() default 5;
 

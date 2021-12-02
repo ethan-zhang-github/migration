@@ -18,6 +18,8 @@ public class MigrationConfigAttributes {
 
     Set<Class<? extends Throwable>> interruptFor;
 
+    Set<Class<? extends Throwable>> ignoreFor;
+
     private int maxProduceWaitSeconds;
 
     private int maxProduceRetryTimes;
@@ -29,11 +31,13 @@ public class MigrationConfigAttributes {
         MigrationConfigAttributes attributes = new MigrationConfigAttributes();
         if (annotation != null) {
             attributes.setInterruptFor(Arrays.stream(annotation.interruptFor()).collect(Collectors.toSet()));
+            attributes.setIgnoreFor(Arrays.stream(annotation.ignoreFor()).collect(Collectors.toSet()));
             attributes.setMaxProduceWaitSeconds(annotation.maxProduceWaitSeconds());
             attributes.setMaxProduceRetryTimes(annotation.maxProduceRetryTimes());
             attributes.setMaxConsumeCount(annotation.maxConsumeCount());
         } else {
             attributes.setInterruptFor(Collections.singleton(Throwable.class));
+            attributes.setIgnoreFor(Collections.emptySet());
             if (MigrationReader.class.isAssignableFrom(clazz)) {
                 attributes.setMaxProduceWaitSeconds(GlobalConfig.READER.getProduceWaitSeconds());
                 attributes.setMaxProduceRetryTimes(GlobalConfig.READER.getProduceRetryTimes());
@@ -48,6 +52,16 @@ public class MigrationConfigAttributes {
             }
         }
         return attributes;
+    }
+
+    public boolean shouldInterruptFor(Throwable throwable) {
+        if (ignoreFor.stream().anyMatch(t -> t.isAssignableFrom(throwable.getClass()))) {
+            return false;
+        }
+        if (interruptFor.stream().anyMatch(t -> t.isAssignableFrom(throwable.getClass()))) {
+            return true;
+        }
+        return true;
     }
 
 }

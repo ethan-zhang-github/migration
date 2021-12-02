@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import lombok.Data;
 import org.junit.Test;
+import priv.ethanzhang.migration.core.annotation.MigrationConfig;
 import priv.ethanzhang.migration.core.context.MigrationChunk;
 import priv.ethanzhang.migration.core.context.MigrationContext;
 import priv.ethanzhang.migration.core.processor.MigrationProcessor;
@@ -59,15 +60,19 @@ public class ExcelTask {
 
     }
 
+//    @MigrationConfig(ignoreFor = IllegalArgumentException.class)
     public static class Processor implements MigrationProcessor<ReaderItem, JSONObject> {
 
         @Override
         public MigrationChunk<JSONObject> process(MigrationContext<ReaderItem, ?> context, MigrationChunk<ReaderItem> input) {
             try {
-                new CountDownLatch(1).await(1, TimeUnit.SECONDS);
+                new CountDownLatch(1).await(100, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
+//            if (Math.random() > 0.9d) {
+//                throw new IllegalArgumentException("test");
+//            }
             return MigrationChunk.of(input.stream().map(i -> JSON.parseObject(JSON.toJSONString(i))).collect(Collectors.toList()));
         }
 

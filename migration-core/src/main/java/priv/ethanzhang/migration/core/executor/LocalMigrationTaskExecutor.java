@@ -126,8 +126,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                         output = processor.process(context, MigrationChunk.of(input));
                     }
                 } catch (Exception e) {
-                    Set<Class<? extends Throwable>> interruptFor = attributes.getInterruptFor();
-                    if (interruptFor.stream().anyMatch(t -> t.isAssignableFrom(e.getClass()))) {
+                    if (attributes.shouldInterruptFor(e)) {
                         context.setProcessorState(FAILED);
                         task.getDispatcher().dispatch(new MigrationTaskFailedEvent(task, MigrationTaskFailedEvent.Cause.PROCESSOR_FAILED, e));
                         return;
@@ -173,8 +172,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                         context.incrWrittenCount(writer.write(context, MigrationChunk.of(output)));
                     }
                 } catch (Exception e) {
-                    Set<Class<? extends Throwable>> interruptFor = attributes.getInterruptFor();
-                    if (interruptFor.stream().anyMatch(t -> t.isAssignableFrom(e.getClass()))) {
+                    if (attributes.shouldInterruptFor(e)) {
                         context.setWriterState(FAILED);
                         writer.destroy(context);
                         task.getDispatcher().dispatch(new MigrationTaskFailedEvent(task, MigrationTaskFailedEvent.Cause.WRITER_FAILED, e));

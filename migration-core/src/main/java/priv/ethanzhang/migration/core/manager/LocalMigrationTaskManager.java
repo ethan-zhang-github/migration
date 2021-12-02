@@ -1,6 +1,7 @@
 package priv.ethanzhang.migration.core.manager;
 
 import lombok.extern.slf4j.Slf4j;
+import priv.ethanzhang.migration.core.context.MigrationState;
 import priv.ethanzhang.migration.core.event.*;
 import priv.ethanzhang.migration.core.task.MigrationTask;
 
@@ -67,6 +68,9 @@ public class LocalMigrationTaskManager implements MigrationTaskManager {
             }
             if (event instanceof MigrationTaskFailedEvent) {
                 log.error("Task [{}] failed...", task.getTaskId());
+                task.getContext().setReaderState(MigrationState.FAILED);
+                task.getContext().setProcessorState(MigrationState.FAILED);
+                task.getContext().setWriterState(MigrationState.FAILED);
                 task.getReporter().report(task);
                 task.getDispatcher().clearEventStream(task.getTaskId());
                 registry.unregister(task);
