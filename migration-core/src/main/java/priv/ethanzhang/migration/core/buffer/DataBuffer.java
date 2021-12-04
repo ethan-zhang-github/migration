@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
  * 数据缓冲区
  * @param <T> 数据类型
  */
-public interface MigrationBuffer<T> {
+public interface DataBuffer<T> {
 
     boolean isEmpty();
 

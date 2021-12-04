@@ -4,7 +4,6 @@ import com.github.rholder.retry.RetryException;
 import com.github.rholder.retry.Retryer;
 import com.github.rholder.retry.RetryerBuilder;
 import com.github.rholder.retry.StopStrategies;
-import com.sun.tools.internal.ws.wsdl.document.soap.SOAPUse;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 

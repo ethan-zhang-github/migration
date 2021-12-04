@@ -1,6 +1,6 @@
 package priv.ethanzhang.migration.core.context;
 
-import priv.ethanzhang.migration.core.buffer.MigrationBuffer;
+import priv.ethanzhang.migration.core.buffer.DataBuffer;
 import priv.ethanzhang.migration.core.task.MigrationTask;
 
 import java.time.Duration;
@@ -17,9 +17,9 @@ public interface MigrationContext<I, O> {
 
     MigrationTask<I, O> getTask();
 
-    MigrationBuffer<I> getReadBuffer();
+    DataBuffer<I> getReadBuffer();
 
-    MigrationBuffer<O> getWriteBuffer();
+    DataBuffer<O> getWriteBuffer();
 
     long getReadCount();
 

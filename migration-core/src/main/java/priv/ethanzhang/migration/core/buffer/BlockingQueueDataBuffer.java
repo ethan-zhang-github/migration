@@ -12,11 +12,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 本地缓冲区（基于阻塞式队列）
+ * 数据缓冲区（基于阻塞式队列）
  * @param <T> 数据类型
  */
 @Slf4j
-public class LocalMigrationBuffer<T> implements MigrationBuffer<T> {
+public class BlockingQueueDataBuffer<T> implements DataBuffer<T> {
 
     private final int capacity;
 
@@ -25,7 +25,7 @@ public class LocalMigrationBuffer<T> implements MigrationBuffer<T> {
     @SuppressWarnings("all")
     private final Monitor monitor = new Monitor();
 
-    public LocalMigrationBuffer(int capacity) {
+    public BlockingQueueDataBuffer(int capacity) {
         this.capacity = capacity;
         this.queue = new LinkedBlockingQueue<>(capacity);
     }

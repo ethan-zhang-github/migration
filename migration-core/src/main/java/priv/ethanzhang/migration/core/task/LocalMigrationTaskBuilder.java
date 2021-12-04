@@ -1,6 +1,6 @@
 package priv.ethanzhang.migration.core.task;
 
-import priv.ethanzhang.migration.core.buffer.LocalMigrationBuffer;
+import priv.ethanzhang.migration.core.buffer.BlockingQueueDataBuffer;
 import priv.ethanzhang.migration.core.context.LocalMigrationContext;
 import priv.ethanzhang.migration.core.context.MigrationContext;
 import priv.ethanzhang.migration.core.context.MigrationParameter;
@@ -103,8 +103,8 @@ public class LocalMigrationTaskBuilder<I, O> extends AbstractMigrationTaskBuilde
         return LocalMigrationContext.<I, O>builder()
                 .task(task)
                 .parameter(parameter)
-                .readBuffer(new LocalMigrationBuffer<>(readBufferSize))
-                .writeBuffer(new LocalMigrationBuffer<>(writeBufferSize))
+                .readBuffer(new BlockingQueueDataBuffer<>(readBufferSize))
+                .writeBuffer(new BlockingQueueDataBuffer<>(writeBufferSize))
                 .build();
     }
 

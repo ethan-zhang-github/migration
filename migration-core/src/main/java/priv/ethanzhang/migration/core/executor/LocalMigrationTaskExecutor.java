@@ -10,7 +10,7 @@ import com.google.common.util.concurrent.MoreExecutors;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import priv.ethanzhang.migration.core.annotation.MigrationConfigAttributes;
-import priv.ethanzhang.migration.core.buffer.MigrationBuffer;
+import priv.ethanzhang.migration.core.buffer.DataBuffer;
 import priv.ethanzhang.migration.core.context.MigrationChunk;
 import priv.ethanzhang.migration.core.context.MigrationContext;
 import priv.ethanzhang.migration.core.event.MigrationTaskFailedEvent;
@@ -53,7 +53,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
         readerTask =  executor.submit(() -> {
             MigrationContext<I, O> context = task.getContext();
             MigrationReader<I> reader = task.getReader();
-            MigrationBuffer<I> readBuffer = context.getReadBuffer();
+            DataBuffer<I> readBuffer = context.getReadBuffer();
             MigrationConfigAttributes attributes = MigrationConfigAttributes.fromClass(reader.getClass());
             Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
                     .retryIfResult(Boolean.FALSE::equals)
@@ -104,8 +104,8 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
         processorTask = executor.submit(() -> {
             MigrationContext<I, O> context = task.getContext();
             MigrationProcessor<I, O> processor = task.getProcessor();
-            MigrationBuffer<I> readBuffer = context.getReadBuffer();
-            MigrationBuffer<O> writeBuffer = context.getWriteBuffer();
+            DataBuffer<I> readBuffer = context.getReadBuffer();
+            DataBuffer<O> writeBuffer = context.getWriteBuffer();
             MigrationConfigAttributes attributes = MigrationConfigAttributes.fromClass(processor.getClass());
             Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
                     .retryIfResult(Boolean.FALSE::equals)
@@ -156,7 +156,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
         writerTask = executor.submit(() -> {
             MigrationContext<I, O> context = task.getContext();
             MigrationWriter<O> writer = task.getWriter();
-            MigrationBuffer<O> writeBuffer = context.getWriteBuffer();
+            DataBuffer<O> writeBuffer = context.getWriteBuffer();
             MigrationConfigAttributes attributes = MigrationConfigAttributes.fromClass(writer.getClass());
             writer.initialize(context);
             while (context.getProcessorState() == RUNNING || !writeBuffer.isEmpty()) {

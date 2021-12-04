@@ -1,7 +1,7 @@
 package priv.ethanzhang.migration.core.context;
 
 import lombok.Builder;
-import priv.ethanzhang.migration.core.buffer.MigrationBuffer;
+import priv.ethanzhang.migration.core.buffer.DataBuffer;
 import priv.ethanzhang.migration.core.task.MigrationTask;
 
 import java.time.Duration;
@@ -22,9 +22,9 @@ public class LocalMigrationContext<I, O> implements MigrationContext<I, O> {
 
     private final MigrationParameter parameter;
 
-    private final MigrationBuffer<I> readBuffer;
+    private final DataBuffer<I> readBuffer;
 
-    private final MigrationBuffer<O> writeBuffer;
+    private final DataBuffer<O> writeBuffer;
 
     private final LongAdder readerCounter = new LongAdder();
 
@@ -57,12 +57,12 @@ public class LocalMigrationContext<I, O> implements MigrationContext<I, O> {
     }
 
     @Override
-    public MigrationBuffer<I> getReadBuffer() {
+    public DataBuffer<I> getReadBuffer() {
         return readBuffer;
     }
 
     @Override
-    public MigrationBuffer<O> getWriteBuffer() {
+    public DataBuffer<O> getWriteBuffer() {
         return writeBuffer;
     }
 

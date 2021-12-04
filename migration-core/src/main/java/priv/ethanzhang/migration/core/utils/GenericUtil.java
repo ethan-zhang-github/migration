@@ -11,4 +11,9 @@ public class GenericUtil {
                 .map(t -> t.getActualTypeArguments()[offset]).findFirst().orElse(null);
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> Class<T> getSuperclassGenericType(Class<?> targetType, int offset) {
+        return (Class<T>) ((ParameterizedType) targetType.getGenericSuperclass()).getActualTypeArguments()[offset];
+    }
+
 }

@@ -25,8 +25,8 @@ public class ExcelTask {
     @Test
     public void test() throws InterruptedException {
 
-        File excel = new File("/Users/ethanzhang/IdeaProjects/migration/migration-example/src/main/resources/demo1.xlsx");
-        File target = new File("/Users/ethanzhang/IdeaProjects/migration/migration-example/src/main/resources/demo2.txt");
+        File excel = new File("D:\\JavaProjects\\migration\\migration-example\\src\\main\\resources\\demo1.xlsx");
+        File target = new File("D:\\JavaProjects\\migration\\migration-example\\src\\main\\resources\\demo2.txt");
 
         MigrationTask<ReaderItem, JSONObject> task = LocalMigrationTaskBuilder.<ReaderItem, JSONObject>newBuilder()
                 .taskId(String.valueOf(System.currentTimeMillis()))
