@@ -8,6 +8,9 @@ import org.junit.Test;
 import priv.ethanzhang.migration.core.annotation.MigrationConfig;
 import priv.ethanzhang.migration.core.context.MigrationChunk;
 import priv.ethanzhang.migration.core.context.MigrationContext;
+import priv.ethanzhang.migration.core.event.MigrationEvent;
+import priv.ethanzhang.migration.core.event.MigrationEventSubscriber;
+import priv.ethanzhang.migration.core.event.MigrationTaskFinishedEvent;
 import priv.ethanzhang.migration.core.processor.MigrationProcessor;
 import priv.ethanzhang.migration.core.reader.EasyExcelReader;
 import priv.ethanzhang.migration.core.task.LocalMigrationTaskBuilder;
@@ -40,6 +43,14 @@ public class ExcelTask {
 
         task.start();
 
+        task.addSubscriber(new MigrationEventSubscriber<MigrationTaskFinishedEvent>() {
+            @Override
+            public void subscribe(MigrationTaskFinishedEvent event) {
+                System.out.println("finish1");
+            }
+        });
+        //task.addSubscriber((MigrationEventSubscriber<MigrationTaskFinishedEvent>) event -> System.out.println("finish2"));
+
         new CountDownLatch(1).await(1, TimeUnit.HOURS);
     }
 
@@ -60,19 +71,19 @@ public class ExcelTask {
 
     }
 
-//    @MigrationConfig(ignoreFor = IllegalArgumentException.class)
+    @MigrationConfig(ignoreFor = IllegalArgumentException.class)
     public static class Processor implements MigrationProcessor<ReaderItem, JSONObject> {
 
         @Override
         public MigrationChunk<JSONObject> process(MigrationContext<ReaderItem, ?> context, MigrationChunk<ReaderItem> input) {
             try {
-                new CountDownLatch(1).await(100, TimeUnit.MILLISECONDS);
+                new CountDownLatch(1).await(10, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-//            if (Math.random() > 0.9d) {
-//                throw new IllegalArgumentException("test");
-//            }
+            if (Math.random() > 0.9d) {
+                throw new IllegalArgumentException("test");
+            }
             return MigrationChunk.of(input.stream().map(i -> JSON.parseObject(JSON.toJSONString(i))).collect(Collectors.toList()));
         }
 
