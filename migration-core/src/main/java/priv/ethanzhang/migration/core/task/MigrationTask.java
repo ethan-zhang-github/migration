@@ -4,8 +4,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import priv.ethanzhang.migration.core.context.MigrationContext;
-import priv.ethanzhang.migration.core.event.MigrationEventDispatcher;
-import priv.ethanzhang.migration.core.event.MigrationEventSubscriber;
+import priv.ethanzhang.migration.core.event.TaskEventDispatcher;
+import priv.ethanzhang.migration.core.event.TaskEventSubscriber;
 import priv.ethanzhang.migration.core.executor.MigrationTaskExecutor;
 import priv.ethanzhang.migration.core.manager.MigrationTaskManager;
 import priv.ethanzhang.migration.core.processor.MigrationProcessor;
@@ -36,7 +36,7 @@ public class MigrationTask<I, O> {
 
     private MigrationTaskManager manager;
 
-    private MigrationEventDispatcher dispatcher;
+    private TaskEventDispatcher dispatcher;
 
     private MigrationTaskReporter reporter;
 
@@ -54,7 +54,7 @@ public class MigrationTask<I, O> {
         executor.shutDown(this);
     }
 
-    public void addSubscriber(MigrationEventSubscriber<?> subscriber) {
+    public void addSubscriber(TaskEventSubscriber<?> subscriber) {
         dispatcher.addSubsriber(subscriber);
     }
 

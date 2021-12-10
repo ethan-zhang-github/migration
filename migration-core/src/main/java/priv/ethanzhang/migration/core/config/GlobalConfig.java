@@ -19,7 +19,7 @@ public interface GlobalConfig {
 
         private Reader() {}
 
-        private int produceRetryTimes = 5;
+        private int produceRetryTimes = 10;
 
         private int produceWaitSeconds = 5;
 
@@ -31,7 +31,7 @@ public interface GlobalConfig {
 
         private Processor() {}
 
-        private int produceRetryTimes = 5;
+        private int produceRetryTimes = 10;
 
         private int produceWaitSeconds = 5;
 

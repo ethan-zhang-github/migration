@@ -1,10 +1,10 @@
 package priv.ethanzhang.migration.core.executor;
 
 import priv.ethanzhang.migration.core.context.MigrationContext;
-import priv.ethanzhang.migration.core.event.MigrationTaskShutdownEvent;
-import priv.ethanzhang.migration.core.event.MigrationTaskStartedEvent;
-import priv.ethanzhang.migration.core.event.MigrationTaskStoppedEvent;
-import priv.ethanzhang.migration.core.exception.MigrationTaskExecutionException;
+import priv.ethanzhang.migration.core.event.TaskTaskShutdownEvent;
+import priv.ethanzhang.migration.core.event.TaskTaskStartedEvent;
+import priv.ethanzhang.migration.core.event.TaskTaskStoppedEvent;
+import priv.ethanzhang.migration.core.exception.TaskExecutionException;
 import priv.ethanzhang.migration.core.task.MigrationTask;
 
 import java.time.Instant;
@@ -24,9 +24,9 @@ public abstract class AbstractMigrationTaskExecutor<I, O> implements MigrationTa
             startProcessor(task);
             context.setWriterState(RUNNING);
             startWriter(task);
-            task.getDispatcher().dispatch(new MigrationTaskStartedEvent(task));
+            task.getDispatcher().dispatch(new TaskTaskStartedEvent(task));
         } else {
-            throw new MigrationTaskExecutionException("The task can not start on this state!");
+            throw new TaskExecutionException("The task can not start on this state!");
         }
     }
 
@@ -40,9 +40,9 @@ public abstract class AbstractMigrationTaskExecutor<I, O> implements MigrationTa
             stopProcessor(task);
             context.setWriterState(STOPPING);
             stopWriter(task);
-            task.getDispatcher().dispatch(new MigrationTaskStoppedEvent(task));
+            task.getDispatcher().dispatch(new TaskTaskStoppedEvent(task));
         } else {
-            throw new MigrationTaskExecutionException("The task can not stop on this state!");
+            throw new TaskExecutionException("The task can not stop on this state!");
         }
     }
 
@@ -56,9 +56,9 @@ public abstract class AbstractMigrationTaskExecutor<I, O> implements MigrationTa
             shutdownProcessor(task);
             context.setWriterState(TERMINATED);
             shutdownWriter(task);
-            task.getDispatcher().dispatch(new MigrationTaskShutdownEvent(task));
+            task.getDispatcher().dispatch(new TaskTaskShutdownEvent(task));
         }else {
-            throw new MigrationTaskExecutionException("The task can not shutdown on this state!");
+            throw new TaskExecutionException("The task can not shutdown on this state!");
         }
     }
 

@@ -20,7 +20,7 @@ public class MigrationConfigAttributes {
 
     Set<Class<? extends Throwable>> ignoreFor;
 
-    private int maxProduceWaitSeconds;
+    private int produceRetryPeriodSeconds;
 
     private int maxProduceRetryTimes;
 
@@ -32,18 +32,18 @@ public class MigrationConfigAttributes {
         if (annotation != null) {
             attributes.setInterruptFor(Arrays.stream(annotation.interruptFor()).collect(Collectors.toSet()));
             attributes.setIgnoreFor(Arrays.stream(annotation.ignoreFor()).collect(Collectors.toSet()));
-            attributes.setMaxProduceWaitSeconds(annotation.maxProduceWaitSeconds());
+            attributes.setProduceRetryPeriodSeconds(annotation.produceRetryPeriodSeconds());
             attributes.setMaxProduceRetryTimes(annotation.maxProduceRetryTimes());
             attributes.setMaxConsumeCount(annotation.maxConsumeCount());
         } else {
             attributes.setInterruptFor(Collections.singleton(Throwable.class));
             attributes.setIgnoreFor(Collections.emptySet());
             if (MigrationReader.class.isAssignableFrom(clazz)) {
-                attributes.setMaxProduceWaitSeconds(GlobalConfig.READER.getProduceWaitSeconds());
+                attributes.setProduceRetryPeriodSeconds(GlobalConfig.READER.getProduceWaitSeconds());
                 attributes.setMaxProduceRetryTimes(GlobalConfig.READER.getProduceRetryTimes());
             }
             if (MigrationProcessor.class.isAssignableFrom(clazz)) {
-                attributes.setMaxProduceWaitSeconds(GlobalConfig.PROCESSOR.getProduceWaitSeconds());
+                attributes.setProduceRetryPeriodSeconds(GlobalConfig.PROCESSOR.getProduceWaitSeconds());
                 attributes.setMaxProduceRetryTimes(GlobalConfig.PROCESSOR.getProduceRetryTimes());
                 attributes.setMaxConsumeCount(GlobalConfig.PROCESSOR.getMaxConsumeCount());
             }

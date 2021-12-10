@@ -11,9 +11,9 @@ public @interface MigrationConfig {
 
     Class<? extends Throwable>[] ignoreFor() default {};
 
-    int maxProduceWaitSeconds() default 5;
+    int produceRetryPeriodSeconds() default 5;
 
-    int maxProduceRetryTimes() default 5;
+    int maxProduceRetryTimes() default 10;
 
     int maxConsumeCount() default 100;
 

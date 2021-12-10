@@ -1,10 +1,10 @@
 package priv.ethanzhang.migration.core.task;
 
-import priv.ethanzhang.migration.core.buffer.BlockingQueueDataBuffer;
+import priv.ethanzhang.migration.core.buffer.DisruptorDataBuffer;
 import priv.ethanzhang.migration.core.context.LocalMigrationContext;
 import priv.ethanzhang.migration.core.context.MigrationContext;
 import priv.ethanzhang.migration.core.context.MigrationParameter;
-import priv.ethanzhang.migration.core.event.LocalMigrationEventDispatcher;
+import priv.ethanzhang.migration.core.event.LocalTaskEventDispatcher;
 import priv.ethanzhang.migration.core.executor.LocalMigrationTaskExecutor;
 import priv.ethanzhang.migration.core.manager.LocalMigrationTaskManager;
 import priv.ethanzhang.migration.core.processor.MigrationProcessor;
@@ -95,7 +95,7 @@ public class LocalMigrationTaskBuilder<I, O> extends AbstractMigrationTaskBuilde
     protected void customBuild(MigrationTask<I, O> task) {
         task.setExecutor(new LocalMigrationTaskExecutor<>(executor));
         task.setManager(LocalMigrationTaskManager.INSTANCE);
-        task.setDispatcher(LocalMigrationEventDispatcher.INSTANCE);
+        task.setDispatcher(LocalTaskEventDispatcher.INSTANCE);
     }
 
     @Override
@@ -103,8 +103,8 @@ public class LocalMigrationTaskBuilder<I, O> extends AbstractMigrationTaskBuilde
         return LocalMigrationContext.<I, O>builder()
                 .task(task)
                 .parameter(parameter)
-                .readBuffer(new BlockingQueueDataBuffer<>(readBufferSize))
-                .writeBuffer(new BlockingQueueDataBuffer<>(writeBufferSize))
+                .readBuffer(new DisruptorDataBuffer<>(readBufferSize))
+                .writeBuffer(new DisruptorDataBuffer<>(writeBufferSize))
                 .build();
     }
 

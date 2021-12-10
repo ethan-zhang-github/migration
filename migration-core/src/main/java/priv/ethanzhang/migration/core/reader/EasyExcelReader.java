@@ -9,7 +9,8 @@ import com.github.rholder.retry.*;
 import org.apache.commons.collections4.CollectionUtils;
 import priv.ethanzhang.migration.core.context.MigrationChunk;
 import priv.ethanzhang.migration.core.context.MigrationContext;
-import priv.ethanzhang.migration.core.event.MigrationTaskWarnningEvent;
+import priv.ethanzhang.migration.core.event.TaskTaskWarnningEvent;
+import priv.ethanzhang.migration.core.exception.TaskBuildException;
 
 import java.io.File;
 import java.util.*;
@@ -40,6 +41,9 @@ public class EasyExcelReader<I> extends OnceInitializedReader<I> {
     private final AtomicBoolean finished = new AtomicBoolean();
 
     public EasyExcelReader(File file, Class<I> clazz, int... sheetNos) {
+        if (!file.exists()) {
+            throw new TaskBuildException(String.format("file [%s] not exists!", file.getAbsolutePath()));
+        }
         this.file = file;
         this.clazz = clazz;
         if (sheetNos != null) {
@@ -103,7 +107,7 @@ public class EasyExcelReader<I> extends OnceInitializedReader<I> {
             try {
                 retryer.call(() -> buffer.offer(data, 5, TimeUnit.SECONDS));
             } catch (ExecutionException | RetryException e) {
-                migrationContext.getTask().getDispatcher().dispatch(new MigrationTaskWarnningEvent(migrationContext.getTask(), MigrationTaskWarnningEvent.Cause.READER_TO_BUFFER_FAILED, e));
+                migrationContext.getTask().getDispatcher().dispatch(new TaskTaskWarnningEvent(migrationContext.getTask(), TaskTaskWarnningEvent.Cause.READER_TO_BUFFER_FAILED, e));
             }
         }
 

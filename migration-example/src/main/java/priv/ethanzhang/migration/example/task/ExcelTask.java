@@ -8,9 +8,8 @@ import org.junit.Test;
 import priv.ethanzhang.migration.core.annotation.MigrationConfig;
 import priv.ethanzhang.migration.core.context.MigrationChunk;
 import priv.ethanzhang.migration.core.context.MigrationContext;
-import priv.ethanzhang.migration.core.event.MigrationEvent;
-import priv.ethanzhang.migration.core.event.MigrationEventSubscriber;
-import priv.ethanzhang.migration.core.event.MigrationTaskFinishedEvent;
+import priv.ethanzhang.migration.core.event.TaskEventSubscriber;
+import priv.ethanzhang.migration.core.event.TaskTaskFinishedEvent;
 import priv.ethanzhang.migration.core.processor.MigrationProcessor;
 import priv.ethanzhang.migration.core.reader.EasyExcelReader;
 import priv.ethanzhang.migration.core.task.LocalMigrationTaskBuilder;
@@ -28,8 +27,8 @@ public class ExcelTask {
     @Test
     public void test() throws InterruptedException {
 
-        File excel = new File("D:\\JavaProjects\\migration\\migration-example\\src\\main\\resources\\demo1.xlsx");
-        File target = new File("D:\\JavaProjects\\migration\\migration-example\\src\\main\\resources\\demo2.txt");
+        File excel = new File("src/main/resources/demo1.xlsx");
+        File target = new File("src/main/resources/demo2.txt");
 
         MigrationTask<ReaderItem, JSONObject> task = LocalMigrationTaskBuilder.<ReaderItem, JSONObject>newBuilder()
                 .taskId(String.valueOf(System.currentTimeMillis()))
@@ -41,15 +40,15 @@ public class ExcelTask {
                 .writeBufferSize(1000)
                 .build();
 
-        task.start();
-
-        task.addSubscriber(new MigrationEventSubscriber<MigrationTaskFinishedEvent>() {
+        task.addSubscriber(new TaskEventSubscriber<TaskTaskFinishedEvent>() {
             @Override
-            public void subscribe(MigrationTaskFinishedEvent event) {
+            public void subscribe(TaskTaskFinishedEvent event) {
                 System.out.println("finish1");
             }
         });
         //task.addSubscriber((MigrationEventSubscriber<MigrationTaskFinishedEvent>) event -> System.out.println("finish2"));
+        task.start();
+
 
         new CountDownLatch(1).await(1, TimeUnit.HOURS);
     }
@@ -81,9 +80,9 @@ public class ExcelTask {
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-            if (Math.random() > 0.9d) {
+            /*if (Math.random() > 0.9d) {
                 throw new IllegalArgumentException("test");
-            }
+            }*/
             return MigrationChunk.of(input.stream().map(i -> JSON.parseObject(JSON.toJSONString(i))).collect(Collectors.toList()));
         }
 

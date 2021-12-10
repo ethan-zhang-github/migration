@@ -29,7 +29,7 @@ public class LocalMigrationTaskManager implements MigrationTaskManager {
         registry = new InMemoryMigrationTaskRegistry();
         reporterScheduler = new LocalReporterScheduler(registry);
         reporterScheduler.startAsync();
-        LocalMigrationEventDispatcher.INSTANCE.addSubsriber(new LocalMigrationTaskManagerSubscriber());
+        LocalTaskEventDispatcher.INSTANCE.addSubsriber(new LocalTaskTaskManagerSubscriber());
     }
 
     @Override
@@ -44,29 +44,29 @@ public class LocalMigrationTaskManager implements MigrationTaskManager {
         reporterScheduler.stopAsync();
     }
 
-    private class LocalMigrationTaskManagerSubscriber implements MigrationEventSubscriber<MigrationTaskLifecycleEvent> {
+    private class LocalTaskTaskManagerSubscriber implements TaskEventSubscriber<TaskTaskLifecycleEvent> {
 
         @Override
-        public void subscribe(MigrationTaskLifecycleEvent event) {
+        public void subscribe(TaskTaskLifecycleEvent event) {
             MigrationTask<?, ?> task = event.getTask();
-            if (event instanceof MigrationTaskStartedEvent) {
+            if (event instanceof TaskTaskStartedEvent) {
                 log.info("Task [{}] started...", task.getTaskId());
                 task.getReporter().report(task);
                 registry.register(task);
             }
-            if (event instanceof MigrationTaskShutdownEvent) {
+            if (event instanceof TaskTaskShutdownEvent) {
                 log.info("Task [{}] has been shutdown...", task.getTaskId());
                 task.getReporter().report(task);
                 task.getDispatcher().clearEventStream(task.getTaskId());
                 registry.unregister(task);
             }
-            if (event instanceof MigrationTaskFinishedEvent) {
+            if (event instanceof TaskTaskFinishedEvent) {
                 log.info("Task [{}] finished...", task.getTaskId());
                 task.getReporter().report(task);
                 task.getDispatcher().clearEventStream(task.getTaskId());
                 registry.unregister(task);
             }
-            if (event instanceof MigrationTaskFailedEvent) {
+            if (event instanceof TaskTaskFailedEvent) {
                 log.error("Task [{}] failed...", task.getTaskId());
                 task.getContext().setReaderState(MigrationState.FAILED);
                 task.getContext().setProcessorState(MigrationState.FAILED);

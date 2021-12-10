@@ -4,7 +4,7 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.RemovalListener;
 import priv.ethanzhang.migration.core.config.GlobalConfig;
-import priv.ethanzhang.migration.core.event.MigrationTaskEvictedEvent;
+import priv.ethanzhang.migration.core.event.TaskTaskEvictedEvent;
 import priv.ethanzhang.migration.core.task.MigrationTask;
 
 import java.time.Duration;
@@ -24,7 +24,7 @@ class InMemoryMigrationTaskRegistry implements MigrationTaskRegistry {
                 .maximumSize(GlobalConfig.LOCAL_REGISTRY.getMaximumSize())
                 .expireAfterWrite(Duration.ofSeconds(GlobalConfig.LOCAL_REGISTRY.getExpireSeconds()))
                 .evictionListener((RemovalListener<String, MigrationTask<?, ?>>) (taskId, task, cause) ->
-                        Optional.ofNullable(task).ifPresent(t -> t.getDispatcher().dispatch(new MigrationTaskEvictedEvent(t, cause))))
+                        Optional.ofNullable(task).ifPresent(t -> t.getDispatcher().dispatch(new TaskTaskEvictedEvent(t, cause))))
                 .build();
     }
 

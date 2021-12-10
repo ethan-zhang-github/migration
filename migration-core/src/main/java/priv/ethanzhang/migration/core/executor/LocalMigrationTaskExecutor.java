@@ -1,9 +1,6 @@
 package priv.ethanzhang.migration.core.executor;
 
-import com.github.rholder.retry.RetryException;
-import com.github.rholder.retry.Retryer;
-import com.github.rholder.retry.RetryerBuilder;
-import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.*;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -13,9 +10,9 @@ import priv.ethanzhang.migration.core.annotation.MigrationConfigAttributes;
 import priv.ethanzhang.migration.core.buffer.DataBuffer;
 import priv.ethanzhang.migration.core.context.MigrationChunk;
 import priv.ethanzhang.migration.core.context.MigrationContext;
-import priv.ethanzhang.migration.core.event.MigrationTaskFailedEvent;
-import priv.ethanzhang.migration.core.event.MigrationTaskFinishedEvent;
-import priv.ethanzhang.migration.core.event.MigrationTaskWarnningEvent;
+import priv.ethanzhang.migration.core.event.TaskTaskFailedEvent;
+import priv.ethanzhang.migration.core.event.TaskTaskFinishedEvent;
+import priv.ethanzhang.migration.core.event.TaskTaskWarnningEvent;
 import priv.ethanzhang.migration.core.processor.MigrationProcessor;
 import priv.ethanzhang.migration.core.reader.MigrationReader;
 import priv.ethanzhang.migration.core.task.MigrationTask;
@@ -58,6 +55,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
             Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
                     .retryIfResult(Boolean.FALSE::equals)
                     .withStopStrategy(StopStrategies.stopAfterAttempt(attributes.getMaxProduceRetryTimes()))
+                    .withWaitStrategy(WaitStrategies.fixedWait(attributes.getProduceRetryPeriodSeconds(), TimeUnit.SECONDS))
                     .build();
             reader.initialize(context);
             while (context.getReaderState() == RUNNING) {
@@ -73,10 +71,10 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                     if (interruptFor.stream().anyMatch(t -> t.isAssignableFrom(e.getClass()))) {
                         context.setReaderState(FAILED);
                         reader.destroy(context);
-                        task.getDispatcher().dispatch(new MigrationTaskFailedEvent(task, MigrationTaskFailedEvent.Cause.READER_FAILED, e));
+                        task.getDispatcher().dispatch(new TaskTaskFailedEvent(task, TaskTaskFailedEvent.Cause.READER_FAILED, e));
                         return;
                     } else {
-                        task.getDispatcher().dispatch(new MigrationTaskWarnningEvent(task, MigrationTaskWarnningEvent.Cause.READER_FAILED, e));
+                        task.getDispatcher().dispatch(new TaskTaskWarnningEvent(task, TaskTaskWarnningEvent.Cause.READER_FAILED, e));
                         continue;
                     }
                 }
@@ -87,11 +85,11 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                 } else {
                     for (I i : chunk) {
                         try {
-                            if (retryer.call(() -> readBuffer.tryProduce(i, attributes.getMaxProduceWaitSeconds(), TimeUnit.SECONDS))) {
+                            if (retryer.call(() -> readBuffer.tryProduce(i))) {
                                 context.incrReadCount(1);
                             }
                         } catch (ExecutionException | RetryException e) {
-                            task.getDispatcher().dispatch(new MigrationTaskWarnningEvent(task, MigrationTaskWarnningEvent.Cause.READER_TO_BUFFER_FAILED, e));
+                            task.getDispatcher().dispatch(new TaskTaskWarnningEvent(task, TaskTaskWarnningEvent.Cause.READER_TO_BUFFER_FAILED, e));
                         }
                     }
                 }
@@ -110,6 +108,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
             Retryer<Boolean> retryer = RetryerBuilder.<Boolean>newBuilder()
                     .retryIfResult(Boolean.FALSE::equals)
                     .withStopStrategy(StopStrategies.stopAfterAttempt(attributes.getMaxProduceRetryTimes()))
+                    .withWaitStrategy(WaitStrategies.fixedWait(attributes.getProduceRetryPeriodSeconds(), TimeUnit.SECONDS))
                     .build();
             while (context.getReaderState() == RUNNING || !readBuffer.isEmpty()) {
                 if (Thread.currentThread().isInterrupted()) {
@@ -128,21 +127,21 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                 } catch (Exception e) {
                     if (attributes.shouldInterruptFor(e)) {
                         context.setProcessorState(FAILED);
-                        task.getDispatcher().dispatch(new MigrationTaskFailedEvent(task, MigrationTaskFailedEvent.Cause.PROCESSOR_FAILED, e));
+                        task.getDispatcher().dispatch(new TaskTaskFailedEvent(task, TaskTaskFailedEvent.Cause.PROCESSOR_FAILED, e));
                         return;
                     } else {
-                        task.getDispatcher().dispatch(new MigrationTaskWarnningEvent(task, MigrationTaskWarnningEvent.Cause.PROCESSOR_FAILED, e));
+                        task.getDispatcher().dispatch(new TaskTaskWarnningEvent(task, TaskTaskWarnningEvent.Cause.PROCESSOR_FAILED, e));
                         continue;
                     }
                 }
                 if (output.isNotEmpty()) {
                     for (O o : output) {
                         try {
-                            if (retryer.call(() -> writeBuffer.tryProduce(o, attributes.getMaxProduceWaitSeconds(), TimeUnit.SECONDS))) {
+                            if (retryer.call(() -> writeBuffer.tryProduce(o))) {
                                 context.incrProcessedCount(1);
                             }
                         } catch (ExecutionException | RetryException e) {
-                            task.getDispatcher().dispatch(new MigrationTaskWarnningEvent(task, MigrationTaskWarnningEvent.Cause.PROCESSOR_TO_BUFFER_FAILED, e));
+                            task.getDispatcher().dispatch(new TaskTaskWarnningEvent(task, TaskTaskWarnningEvent.Cause.PROCESSOR_TO_BUFFER_FAILED, e));
                         }
                     }
                 }
@@ -165,7 +164,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                     return;
                 }
                 try {
-                    List<O> output = writeBuffer.consumeIfPossible(writeBuffer.size());
+                    List<O> output = writeBuffer.consumeIfPossible(attributes.getMaxConsumeCount());
                     if (CollectionUtils.isEmpty(output)) {
                         Thread.yield();
                     } else {
@@ -175,10 +174,10 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                     if (attributes.shouldInterruptFor(e)) {
                         context.setWriterState(FAILED);
                         writer.destroy(context);
-                        task.getDispatcher().dispatch(new MigrationTaskFailedEvent(task, MigrationTaskFailedEvent.Cause.WRITER_FAILED, e));
+                        task.getDispatcher().dispatch(new TaskTaskFailedEvent(task, TaskTaskFailedEvent.Cause.WRITER_FAILED, e));
                         return;
                     } else {
-                        task.getDispatcher().dispatch(new MigrationTaskWarnningEvent(task, MigrationTaskWarnningEvent.Cause.WRITER_FAILED, e));
+                        task.getDispatcher().dispatch(new TaskTaskWarnningEvent(task, TaskTaskWarnningEvent.Cause.WRITER_FAILED, e));
                     }
                 }
             }
@@ -187,7 +186,7 @@ public class LocalMigrationTaskExecutor<I, O> extends AbstractMigrationTaskExecu
                 writer.destroy(context);
             }
             if (context.isTerminated()) {
-                task.getDispatcher().dispatch(new MigrationTaskFinishedEvent(task));
+                task.getDispatcher().dispatch(new TaskTaskFinishedEvent(task));
             }
         });
     }

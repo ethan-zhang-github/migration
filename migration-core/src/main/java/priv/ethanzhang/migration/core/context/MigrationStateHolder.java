@@ -1,6 +1,6 @@
 package priv.ethanzhang.migration.core.context;
 
-import priv.ethanzhang.migration.core.exception.MigrationStateTransferException;
+import priv.ethanzhang.migration.core.exception.StateTransferException;
 
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -20,21 +20,21 @@ public class MigrationStateHolder {
         switch (origin) {
             case NEW:
                 if (target != MigrationState.RUNNING) {
-                    throw new MigrationStateTransferException(origin, target);
+                    throw new StateTransferException(origin, target);
                 }
                 break;
             case RUNNING:
                 if (target == MigrationState.NEW) {
-                    throw new MigrationStateTransferException(origin, target);
+                    throw new StateTransferException(origin, target);
                 }
                 break;
             case STOPPING:
                 if (target != MigrationState.RUNNING && target != MigrationState.TERMINATED) {
-                    throw new MigrationStateTransferException(origin, target);
+                    throw new StateTransferException(origin, target);
                 }
                 break;
             case FAILED: case TERMINATED:
-                throw new MigrationStateTransferException(origin, target);
+                throw new StateTransferException(origin, target);
             default:
                 break;
         }

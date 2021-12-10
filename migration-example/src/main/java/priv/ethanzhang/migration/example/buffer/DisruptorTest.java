@@ -12,12 +12,19 @@ import org.junit.Test;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 @Slf4j
 public class DisruptorTest {
+
+    @Test
+    public void testQueue() {
+        ConcurrentLinkedQueue<Integer> queue = new ConcurrentLinkedQueue<>();
+        System.out.println(queue.poll());
+    }
 
     @Test
     public void test() throws InterruptedException {

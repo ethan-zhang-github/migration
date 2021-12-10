@@ -1,28 +1,39 @@
 package priv.ethanzhang.migration.core.buffer;
 
-import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.util.DaemonThreadFactory;
-import priv.ethanzhang.migration.core.exception.MigrationTaskBuildException;
-import priv.ethanzhang.migration.core.utils.GenericUtil;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
+import static com.sun.xml.internal.fastinfoset.util.ValueArray.MAXIMUM_CAPACITY;
+
+/**
+ * 数据缓冲区（基于 Disruptor 无锁队列实现）
+ * @param <T> 数据类型
+ */
 public class DisruptorDataBuffer<T> implements DataBuffer<T> {
 
-    private final Disruptor<T> disruptor;
+    private final Disruptor<EventWrapper<T>> disruptor;
+
+    private final ConcurrentLinkedQueue<T> buffer;
+
+    private final int actualCapacity;
 
     public DisruptorDataBuffer(int capacity) {
-        disruptor = new Disruptor<T>(getEventFactory(), capacity, DaemonThreadFactory.INSTANCE);
+        actualCapacity = capacityFor(capacity);
+        disruptor = new Disruptor<>(EventWrapper::new, actualCapacity, DaemonThreadFactory.INSTANCE);
+        disruptor.handleEventsWith(this::onEvent);
+        buffer = new ConcurrentLinkedQueue<>();
+        disruptor.start();
     }
 
     @Override
     public boolean isEmpty() {
-        return disruptor.getRingBuffer().remainingCapacity() == disruptor.getBufferSize();
+        return (disruptor.getRingBuffer().remainingCapacity() == disruptor.getBufferSize()) && buffer.isEmpty();
     }
 
     @Override
@@ -37,53 +48,77 @@ public class DisruptorDataBuffer<T> implements DataBuffer<T> {
 
     @Override
     public int capacity() {
-        return (int) disruptor.getBufferSize();
-    }
-
-    @Override
-    public boolean tryProduce(T data, long timeout, TimeUnit timeUnit) {
-        return false;
+        return actualCapacity;
     }
 
     @Override
     public void produce(T data) {
-
+        disruptor.getRingBuffer().publishEvent(this::translate, data);
     }
 
     @Override
-    public boolean tryProduce(Collection<T> data, long timeout, TimeUnit timeUnit) {
-        return false;
+    public boolean tryProduce(T data) {
+        return disruptor.getRingBuffer().tryPublishEvent(this::translate, data);
     }
 
     @Override
     public T consume() {
-        return null;
-    }
-
-    @Override
-    public T tryConsume(long timeout, TimeUnit timeUnit) {
-        return null;
+        while (true) {
+            T head = buffer.poll();
+            if (head != null) {
+                return head;
+            } else {
+                Thread.yield();
+            }
+        }
     }
 
     @Override
     public List<T> consumeIfPossible(int maxsize) {
-        return null;
+        List<T> list = new ArrayList<>(maxsize);
+        while (true) {
+            if (list.size() >= maxsize) {
+                return list;
+            }
+            T head = buffer.poll();
+            if (head == null) {
+                return list;
+            }
+            list.add(head);
+        }
     }
 
-    private EventFactory<T> getEventFactory() {
-        Class<T> genericType = GenericUtil.getSuperclassGenericType(this.getClass(), 0);
-        try {
-            Constructor<T> constructor = genericType.getConstructor();
-            return () -> {
-                try {
-                    return constructor.newInstance();
-                } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                    throw new MigrationTaskBuildException("", e);
-                }
-            };
-        } catch (NoSuchMethodException e) {
-            throw new MigrationTaskBuildException("", e);
+    private void translate(EventWrapper<T> event, long sequence, T data) {
+        event.setData(data);
+    }
+
+    private void onEvent(EventWrapper<T> event, long sequence, boolean endOfBatch) {
+        while (true) {
+            if (buffer.size() < actualCapacity) {
+                buffer.offer(event.getData());
+                return;
+            } else {
+                Thread.yield();
+            }
         }
+    }
+
+    private int capacityFor(int cap) {
+        int n = cap - 1;
+        n |= n >>> 1;
+        n |= n >>> 2;
+        n |= n >>> 4;
+        n |= n >>> 8;
+        n |= n >>> 16;
+        return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+    }
+
+    @Getter
+    @Setter
+    private static class EventWrapper<T> {
+
+        private T data;
+
     }
 
 }
