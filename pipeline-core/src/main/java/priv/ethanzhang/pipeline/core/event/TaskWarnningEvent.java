@@ -5,6 +5,7 @@ import priv.ethanzhang.pipeline.core.task.PipeTask;
 
 /**
  * 任务警告事件
+ * @author ethan zhang
  */
 @Getter
 public class TaskWarnningEvent extends TaskLifecycleEvent {

@@ -101,6 +101,13 @@ public enum LocalTaskManager implements TaskManager {
                 log.info("Task [{}] has been evicted, cause: {}", task.getTaskId(), event.getCause());
             }
         });
+        dispatcher.addSubsriber(new GenericTaskEventSubscriber<TaskWarnningEvent>() {
+            @Override
+            protected void subscribeInternal(TaskWarnningEvent event) {
+                PipeTask<?, ?> task = event.getTask();
+                log.warn("Task [{}] warnning, cause: {}, e: {}", task.getTaskId(), event.getCause(), event.getThrowable());
+            }
+        });
     }
 
 }

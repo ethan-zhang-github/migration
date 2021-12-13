@@ -6,6 +6,7 @@ import priv.ethanzhang.pipeline.core.context.TaskContext;
 /**
  * 数据读取
  * @param <I> 读取类型
+ * @author ethan zhang
  */
 @FunctionalInterface
 public interface PipeReader<I> {

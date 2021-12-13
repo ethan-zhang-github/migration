@@ -6,6 +6,7 @@ import priv.ethanzhang.pipeline.core.context.TaskContext;
 /**
  * 数据写入
  * @param <O> 写入类型
+ * @author ethan zhang
  */
 @FunctionalInterface
 public interface PipeWriter<O> {
