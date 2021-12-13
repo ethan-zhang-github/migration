@@ -6,6 +6,7 @@ import priv.ethanzhang.pipeline.core.task.PipeTask;
 
 /**
  * 任务淘汰事件
+ * @author ethan zhang
  */
 @Getter
 public class TaskEvictedEvent extends TaskLifecycleEvent {

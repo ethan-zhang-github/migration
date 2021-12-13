@@ -8,6 +8,7 @@ import org.junit.Test;
 import priv.ethanzhang.pipeline.core.annotation.TaskConfig;
 import priv.ethanzhang.pipeline.core.context.DataChunk;
 import priv.ethanzhang.pipeline.core.context.TaskContext;
+import priv.ethanzhang.pipeline.core.event.TaskFailedEvent;
 import priv.ethanzhang.pipeline.core.event.TaskFinishedEvent;
 import priv.ethanzhang.pipeline.core.processor.PipeProcessor;
 import priv.ethanzhang.pipeline.core.reader.EasyExcelReader;
@@ -39,8 +40,9 @@ public class ExcelTask {
                 .writeBufferSize(1000)
                 .build();
 
-        task.addSubscriber(event -> System.out.println("finish1"), TaskFinishedEvent.class);
-        task.addSubscriber(event -> System.out.println("finish2"), TaskFinishedEvent.class);
+        task.addSubscriber(event -> System.out.println("lifecycle event ..."));
+        task.addSubscriber(event -> System.out.println("finished event ..."), TaskFinishedEvent.class);
+        task.addSubscriber(event -> System.out.println("failed event ..."), TaskFailedEvent.class);
 
         task.start();
 
@@ -65,7 +67,7 @@ public class ExcelTask {
 
     }
 
-    @TaskConfig(ignoreFor = IllegalArgumentException.class)
+    @TaskConfig(interruptFor = IllegalArgumentException.class)
     public static class Processor implements PipeProcessor<ReaderItem, JSONObject> {
 
         @Override

@@ -32,8 +32,7 @@ public enum LocalTaskManager implements TaskManager {
         registry = new InMemoryTaskRegistry();
         reporterScheduler = new LocalReporterScheduler(registry);
         reporterScheduler.startAsync();
-        TaskEventDispatcher dispatcher = GlobalConfig.LOCAL_DISPATCHER.getDefaultDispatcher().get();
-        dispatcher.addSubsriber(new LocalTaskTaskManagerSubscriber());
+        addSubscribers();
     }
 
     @Override
@@ -48,39 +47,60 @@ public enum LocalTaskManager implements TaskManager {
         reporterScheduler.stopAsync();
     }
 
-    private class LocalTaskTaskManagerSubscriber extends GenericTaskEventSubscriber<TaskLifecycleEvent> {
-
-        @Override
-        public void subscribeInternal(TaskLifecycleEvent event) {
-            PipeTask<?, ?> task = event.getTask();
-            if (event instanceof TaskStartedEvent) {
+    private void addSubscribers() {
+        TaskEventDispatcher dispatcher = GlobalConfig.LOCAL_DISPATCHER.getDefaultDispatcher().get();
+        dispatcher.addSubsriber(new GenericTaskEventSubscriber<TaskStartedEvent>() {
+            @Override
+            protected void subscribeInternal(TaskStartedEvent event) {
+                PipeTask<?, ?> task = event.getTask();
                 log.info("Task [{}] started...", task.getTaskId());
                 task.getReporter().report(task);
                 registry.register(task);
             }
-            if (event instanceof TaskShutdownEvent) {
+        });
+        dispatcher.addSubsriber(new GenericTaskEventSubscriber<TaskShutdownEvent>() {
+            @Override
+            protected void subscribeInternal(TaskShutdownEvent event) {
+                PipeTask<?, ?> task = event.getTask();
                 task.getReporter().report(task);
                 task.getDispatcher().clearTaskEventStream(task.getTaskId());
                 registry.unregister(task);
                 log.info("Task [{}] has been shutdown...", task.getTaskId());
             }
-            if (event instanceof TaskFinishedEvent) {
+        });
+        dispatcher.addSubsriber(new GenericTaskEventSubscriber<TaskFinishedEvent>() {
+            @Override
+            protected void subscribeInternal(TaskFinishedEvent event) {
+                PipeTask<?, ?> task = event.getTask();
                 task.getReporter().report(task);
                 task.getDispatcher().clearTaskEventStream(task.getTaskId());
                 registry.unregister(task);
                 log.info("Task [{}] finished...", task.getTaskId());
             }
-            if (event instanceof TaskFailedEvent) {
+        });
+        dispatcher.addSubsriber(new GenericTaskEventSubscriber<TaskFailedEvent>() {
+            @Override
+            protected void subscribeInternal(TaskFailedEvent event) {
+                PipeTask<?, ?> task = event.getTask();
                 task.getContext().setReaderState(TaskState.FAILED);
                 task.getContext().setProcessorState(TaskState.FAILED);
                 task.getContext().setWriterState(TaskState.FAILED);
                 task.getReporter().report(task);
                 task.getDispatcher().clearTaskEventStream(task.getTaskId());
                 registry.unregister(task);
-                log.error("Task [{}] failed...", task.getTaskId());
+                log.error("Task [{}] failed, cause: {}", task.getTaskId(), event.getCause(), event.getThrowable());
             }
-        }
-
+        });
+        dispatcher.addSubsriber(new GenericTaskEventSubscriber<TaskEvictedEvent>() {
+            @Override
+            protected void subscribeInternal(TaskEvictedEvent event) {
+                PipeTask<?, ?> task = event.getTask();
+                task.getReporter().report(task);
+                task.getDispatcher().clearTaskEventStream(task.getTaskId());
+                registry.unregister(task);
+                log.info("Task [{}] has been evicted, cause: {}", task.getTaskId(), event.getCause());
+            }
+        });
     }
 
 }
