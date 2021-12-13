@@ -2,20 +2,20 @@ package priv.ethanzhang.pipeline.core.buffer;
 
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.util.DaemonThreadFactory;
-import lombok.Getter;
-import lombok.Setter;
+import priv.ethanzhang.pipeline.core.model.Wrapper;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
- * 数据缓冲区（基于 Disruptor 无锁队列实现）
+ * 数据缓冲区（基于 disruptor 实现）
  * @param <T> 数据类型
+ * @author ethan zhang
  */
 public class DisruptorDataBuffer<T> implements DataBuffer<T> {
 
-    private final Disruptor<EventWrapper<T>> disruptor;
+    private final Disruptor<Wrapper<T>> disruptor;
 
     private final ConcurrentLinkedQueue<T> buffer;
 
@@ -23,7 +23,7 @@ public class DisruptorDataBuffer<T> implements DataBuffer<T> {
 
     public DisruptorDataBuffer(int capacity) {
         actualCapacity = capacityFor(capacity);
-        disruptor = new Disruptor<>(EventWrapper::new, actualCapacity, DaemonThreadFactory.INSTANCE);
+        disruptor = new Disruptor<>(Wrapper::new, actualCapacity, DaemonThreadFactory.INSTANCE);
         disruptor.handleEventsWith(this::onEvent);
         buffer = new ConcurrentLinkedQueue<>();
         disruptor.start();
@@ -86,11 +86,11 @@ public class DisruptorDataBuffer<T> implements DataBuffer<T> {
         }
     }
 
-    private void translate(EventWrapper<T> event, long sequence, T data) {
+    private void translate(Wrapper<T> event, long sequence, T data) {
         event.setData(data);
     }
 
-    private void onEvent(EventWrapper<T> event, long sequence, boolean endOfBatch) {
+    private void onEvent(Wrapper<T> event, long sequence, boolean endOfBatch) {
         while (true) {
             if (buffer.size() < actualCapacity) {
                 buffer.offer(event.getData());
@@ -108,15 +108,7 @@ public class DisruptorDataBuffer<T> implements DataBuffer<T> {
         n |= n >>> 4;
         n |= n >>> 8;
         n |= n >>> 16;
-        return (n < 0) ? 1 : (n >= Integer.MAX_VALUE) ? Integer.MAX_VALUE : n + 1;
-    }
-
-    @Getter
-    @Setter
-    private static class EventWrapper<T> {
-
-        private T data;
-
+        return (n < 0) ? 1 : (n >= 1 << 20) ? 1 << 20 : n + 1;
     }
 
 }

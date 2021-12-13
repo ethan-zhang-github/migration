@@ -64,6 +64,12 @@ public interface TaskContext<I, O> {
 
     Duration getReportPeriod();
 
+    void setTimeout(Duration timeout);
+
+    Duration getTimeout();
+
+    boolean isTimeout();
+
     default boolean isTerminated() {
         return getReaderState() == TaskState.TERMINATED && getProcessorState() == TaskState.TERMINATED && getWriterState() == TaskState.TERMINATED;
     }

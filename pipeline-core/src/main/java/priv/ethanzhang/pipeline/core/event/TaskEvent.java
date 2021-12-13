@@ -1,8 +1,16 @@
 package priv.ethanzhang.pipeline.core.event;
 
+import lombok.Getter;
+
+import java.time.Instant;
+
 /**
- * 任务事件（标记性接口）
+ * 任务事件
  * @author ethan zhang
  */
-public interface TaskEvent {
+@Getter
+public abstract class TaskEvent {
+
+    private final Instant timestamp = Instant.now();
+
 }

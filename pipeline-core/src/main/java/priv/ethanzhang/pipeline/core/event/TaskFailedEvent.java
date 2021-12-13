@@ -3,6 +3,10 @@ package priv.ethanzhang.pipeline.core.event;
 import lombok.Getter;
 import priv.ethanzhang.pipeline.core.task.PipeTask;
 
+/**
+ * 任务失败事件
+ * @author ethan zhang
+ */
 @Getter
 public class TaskFailedEvent extends TaskLifecycleEvent {
 

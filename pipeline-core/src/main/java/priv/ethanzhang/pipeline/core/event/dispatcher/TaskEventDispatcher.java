@@ -7,7 +7,8 @@ import priv.ethanzhang.pipeline.core.event.subscriber.TaskEventSubscriber;
 import java.util.List;
 
 /**
- * 事件分发器
+ * 任务事件分发器
+ * @author ethan zhang
  */
 public interface TaskEventDispatcher {
 

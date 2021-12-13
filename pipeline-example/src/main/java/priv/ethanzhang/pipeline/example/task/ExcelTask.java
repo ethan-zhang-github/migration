@@ -40,7 +40,7 @@ public class ExcelTask {
                 .build();
 
         task.addSubscriber(event -> System.out.println("finish1"), TaskFinishedEvent.class);
-        task.addSubscriber(event -> System.out.println("finish2"));
+        task.addSubscriber(event -> System.out.println("finish2"), TaskFinishedEvent.class);
 
         task.start();
 

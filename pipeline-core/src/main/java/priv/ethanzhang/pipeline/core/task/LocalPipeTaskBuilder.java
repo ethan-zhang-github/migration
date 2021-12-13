@@ -1,27 +1,31 @@
 package priv.ethanzhang.pipeline.core.task;
 
-import priv.ethanzhang.pipeline.core.buffer.DisruptorDataBuffer;
+import priv.ethanzhang.pipeline.core.buffer.DataBuffer;
+import priv.ethanzhang.pipeline.core.config.GlobalConfig;
+import priv.ethanzhang.pipeline.core.context.LocalTaskContext;
+import priv.ethanzhang.pipeline.core.context.TaskContext;
 import priv.ethanzhang.pipeline.core.context.TaskParameter;
-import priv.ethanzhang.pipeline.core.event.dispatcher.GuavaTaskEventDispatcher;
+import priv.ethanzhang.pipeline.core.executor.LocalTaskExecutor;
+import priv.ethanzhang.pipeline.core.manager.LocalTaskManager;
 import priv.ethanzhang.pipeline.core.processor.PipeProcessor;
 import priv.ethanzhang.pipeline.core.reader.PipeReader;
 import priv.ethanzhang.pipeline.core.reporter.TaskReporter;
 import priv.ethanzhang.pipeline.core.writer.PipeWriter;
-import priv.ethanzhang.pipeline.core.context.LocalTaskContext;
-import priv.ethanzhang.pipeline.core.context.TaskContext;
-import priv.ethanzhang.pipeline.core.executor.LocalTaskExecutor;
-import priv.ethanzhang.pipeline.core.manager.LocalTaskManager;
 
 import java.time.Duration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class LocalPipeTaskBuilder<I, O> extends AbstractPipeTaskBuilder<I, O> {
 
-    private int readBufferSize = Integer.MAX_VALUE;
+    private int readBufferSize = GlobalConfig.BUFFER.getBufferSize();
 
-    private int writeBufferSize = Integer.MAX_VALUE;
+    private int writeBufferSize = GlobalConfig.BUFFER.getBufferSize();
+
+    @SuppressWarnings("rawtypes")
+    private Function<Integer, DataBuffer> dataBuffer = GlobalConfig.BUFFER.getDefaultDataBuffer();
 
     private ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 
@@ -76,6 +80,17 @@ public class LocalPipeTaskBuilder<I, O> extends AbstractPipeTaskBuilder<I, O> {
         return this;
     }
 
+    public LocalPipeTaskBuilder<I, O> timeout(Duration timeout) {
+        this.timeout = timeout;
+        return this;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public LocalPipeTaskBuilder<I, O> bufferType(Function<Integer, DataBuffer> dataBuffer) {
+        this.dataBuffer = dataBuffer;
+        return this;
+    }
+
     public LocalPipeTaskBuilder<I, O> readBufferSize(int readBufferSize) {
         this.readBufferSize = readBufferSize;
         return this;
@@ -95,16 +110,17 @@ public class LocalPipeTaskBuilder<I, O> extends AbstractPipeTaskBuilder<I, O> {
     protected void customBuild(PipeTask<I, O> task) {
         task.setExecutor(new LocalTaskExecutor<>(executor));
         task.setManager(LocalTaskManager.INSTANCE);
-        task.setDispatcher(GuavaTaskEventDispatcher.INSTANCE);
+        task.setDispatcher(GlobalConfig.LOCAL_DISPATCHER.getDefaultDispatcher().get());
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected TaskContext<I, O> buildContext(PipeTask<I, O> task) {
         return LocalTaskContext.<I, O>builder()
                 .task(task)
                 .parameter(parameter)
-                .readBuffer(new DisruptorDataBuffer<>(readBufferSize))
-                .writeBuffer(new DisruptorDataBuffer<>(writeBufferSize))
+                .readBuffer(dataBuffer.apply(readBufferSize))
+                .writeBuffer(dataBuffer.apply(writeBufferSize))
                 .build();
     }
 

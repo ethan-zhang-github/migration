@@ -1,9 +1,10 @@
 package priv.ethanzhang.pipeline.core.manager;
 
 import lombok.extern.slf4j.Slf4j;
+import priv.ethanzhang.pipeline.core.config.GlobalConfig;
 import priv.ethanzhang.pipeline.core.context.TaskState;
 import priv.ethanzhang.pipeline.core.event.*;
-import priv.ethanzhang.pipeline.core.event.dispatcher.GuavaTaskEventDispatcher;
+import priv.ethanzhang.pipeline.core.event.dispatcher.TaskEventDispatcher;
 import priv.ethanzhang.pipeline.core.event.subscriber.GenericTaskEventSubscriber;
 import priv.ethanzhang.pipeline.core.task.PipeTask;
 
@@ -13,15 +14,15 @@ import java.util.Map;
  * 本地任务管理器
  */
 @Slf4j
-public class LocalTaskManager implements TaskManager {
+public enum LocalTaskManager implements TaskManager {
 
-    public static final LocalTaskManager INSTANCE = new LocalTaskManager();
+    INSTANCE;
 
     private TaskRegistry registry;
 
     private LocalReporterScheduler reporterScheduler;
 
-    private LocalTaskManager() {
+    {
         initialize();
     }
 
@@ -31,7 +32,8 @@ public class LocalTaskManager implements TaskManager {
         registry = new InMemoryTaskRegistry();
         reporterScheduler = new LocalReporterScheduler(registry);
         reporterScheduler.startAsync();
-        GuavaTaskEventDispatcher.INSTANCE.addSubsriber(new LocalTaskTaskManagerSubscriber());
+        TaskEventDispatcher dispatcher = GlobalConfig.LOCAL_DISPATCHER.getDefaultDispatcher().get();
+        dispatcher.addSubsriber(new LocalTaskTaskManagerSubscriber());
     }
 
     @Override
@@ -57,25 +59,25 @@ public class LocalTaskManager implements TaskManager {
                 registry.register(task);
             }
             if (event instanceof TaskShutdownEvent) {
-                log.info("Task [{}] has been shutdown...", task.getTaskId());
                 task.getReporter().report(task);
                 task.getDispatcher().clearTaskEventStream(task.getTaskId());
                 registry.unregister(task);
+                log.info("Task [{}] has been shutdown...", task.getTaskId());
             }
             if (event instanceof TaskFinishedEvent) {
-                log.info("Task [{}] finished...", task.getTaskId());
                 task.getReporter().report(task);
                 task.getDispatcher().clearTaskEventStream(task.getTaskId());
                 registry.unregister(task);
+                log.info("Task [{}] finished...", task.getTaskId());
             }
             if (event instanceof TaskFailedEvent) {
-                log.error("Task [{}] failed...", task.getTaskId());
                 task.getContext().setReaderState(TaskState.FAILED);
                 task.getContext().setProcessorState(TaskState.FAILED);
                 task.getContext().setWriterState(TaskState.FAILED);
                 task.getReporter().report(task);
                 task.getDispatcher().clearTaskEventStream(task.getTaskId());
                 registry.unregister(task);
+                log.error("Task [{}] failed...", task.getTaskId());
             }
         }
 

@@ -13,12 +13,12 @@ import java.util.List;
 import java.util.concurrent.*;
 
 /**
- * 事件分发器（基于 guava event bus 实现）
+ * 本地事件分发器（基于 guava event bus 实现）
  * @author ethan zhang
  */
-public class GuavaTaskEventDispatcher implements TaskEventDispatcher {
+public enum GuavaTaskEventDispatcher implements TaskEventDispatcher {
 
-    public static final GuavaTaskEventDispatcher INSTANCE = new GuavaTaskEventDispatcher();
+    INSTANCE;
 
     private final EventBus eventBus = new AsyncEventBus(GuavaTaskEventDispatcher.class.getName(), Executors.newFixedThreadPool(1));
 
@@ -26,7 +26,7 @@ public class GuavaTaskEventDispatcher implements TaskEventDispatcher {
 
     private final ConcurrentLinkedQueue<TaskEventSubscriber> subscribers = new ConcurrentLinkedQueue<>();
 
-    private GuavaTaskEventDispatcher() {
+    {
         eventBus.register(new Subscriber());
     }
 
@@ -36,10 +36,8 @@ public class GuavaTaskEventDispatcher implements TaskEventDispatcher {
         if (event instanceof TaskLifecycleEvent) {
             TaskLifecycleEvent taskEvent = (TaskLifecycleEvent) event;
             PipeTask<?, ?> task = taskEvent.getTask();
-            if (task != null) {
-                eventStream.putIfAbsent(task.getTaskId(), new ConcurrentLinkedDeque<>());
-                eventStream.get(task.getTaskId()).add(taskEvent);
-            }
+            eventStream.putIfAbsent(task.getTaskId(), new ConcurrentLinkedDeque<>());
+            eventStream.get(task.getTaskId()).add(taskEvent);
         }
     }
 
@@ -64,7 +62,6 @@ public class GuavaTaskEventDispatcher implements TaskEventDispatcher {
         @Subscribe
         public void subscribeMigrationEvent(TaskEvent event) {
             for (TaskEventSubscriber subscriber : subscribers) {
-
                 if (subscriber.supports(event)) {
                     try {
                         subscriber.subscribe(event);

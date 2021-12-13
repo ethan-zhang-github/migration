@@ -11,6 +11,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * 数据缓冲区（基于阻塞式队列）
  * @param <T> 数据类型
+ * @author ethan zhang
  */
 @Slf4j
 public class BlockingQueueDataBuffer<T> implements DataBuffer<T> {

@@ -47,6 +47,8 @@ public class LocalTaskContext<I, O> implements TaskContext<I, O> {
 
     private Duration reportPeriod;
 
+    private Duration timeout;
+
     @Override
     public TaskParameter getParameter() {
         return parameter;
@@ -176,6 +178,27 @@ public class LocalTaskContext<I, O> implements TaskContext<I, O> {
     @Override
     public Duration getReportPeriod() {
         return reportPeriod;
+    }
+
+    @Override
+    public void setTimeout(Duration timeout) {
+        this.timeout = timeout;
+    }
+
+    @Override
+    public Duration getTimeout() {
+        return timeout;
+    }
+
+    @Override
+    public boolean isTimeout() {
+        if (startTimestamap.get() == null) {
+            return false;
+        }
+        if (finishTimestamap.get() != null) {
+            return false;
+        }
+        return Duration.between(startTimestamap.get(), Instant.now()).compareTo(timeout) > 0;
     }
 
 }
