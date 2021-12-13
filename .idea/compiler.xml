@@ -7,9 +7,9 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="migration-example" />
-        <module name="migration-core" />
-        <module name="migration-redisson" />
+        <module name="pipeline-redisson" />
+        <module name="pipeline-core" />
+        <module name="pipeline-example" />
       </profile>
     </annotationProcessing>
   </component>
