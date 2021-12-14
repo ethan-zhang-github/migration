@@ -69,9 +69,9 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
             DataBuffer readBuffer = isHead ? context.getReadBuffer() : pre.getBuffer();
             // 写出缓冲区，尾结点取 wirter buffer，非尾结点取当前节点的 buffer
             DataBuffer writeBuffer = isTail ? context.getWriteBuffer() : cur.getBuffer();
+            // 设置当前节点状态为运行中
+            cur.setState(TaskState.RUNNING);
             processorFutures.add(executor.submit(() -> {
-                // 设置当前节点状态为运行中
-                cur.setState(TaskState.RUNNING);
                 while (true) {
                     // 上个节点状态，头节点取 reader state，非头节点取上个节点的 state
                     TaskState preState = isHead ? context.getReaderState() : pre.getState();

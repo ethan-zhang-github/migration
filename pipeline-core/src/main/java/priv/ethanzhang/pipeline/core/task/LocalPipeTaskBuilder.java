@@ -159,9 +159,19 @@ public class LocalPipeTaskBuilder<I, O> extends AbstractPipeTaskBuilder<I, O> {
             return new ProcessorChainBuilder<>(nodes);
         }
 
-        public LocalPipeTaskBuilder<I, O> end() {
+        public <V> ProcessorChainBuilder<T, V> then(PipeProcessor<? super R, ? extends V> processor) {
+            return then(processor, GlobalConfig.BUFFER.getBufferSize());
+        }
+
+        public LocalPipeTaskBuilder<I, O> end(PipeProcessor<? super R, ? extends O> processor, int bufferSize) {
+            PipeProcessorNode<? super R, ? extends O> node = new PipeProcessorNode<>(processor, bufferSize);
+            nodes.add(node);
             LocalPipeTaskBuilder.this.processorChain = new PipeProcessorChain<I, O>(nodes);
             return LocalPipeTaskBuilder.this;
+        }
+
+        public LocalPipeTaskBuilder<I, O> end(PipeProcessor<? super R, ? extends O> processor) {
+            return end(processor, GlobalConfig.BUFFER.getBufferSize());
         }
 
     }

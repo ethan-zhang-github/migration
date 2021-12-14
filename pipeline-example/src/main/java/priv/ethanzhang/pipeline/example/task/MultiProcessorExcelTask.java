@@ -1,11 +1,8 @@
 package priv.ethanzhang.pipeline.example.task;
 
-import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import lombok.Data;
 import org.junit.Test;
-import priv.ethanzhang.pipeline.core.annotation.TaskConfig;
 import priv.ethanzhang.pipeline.core.context.DataChunk;
 import priv.ethanzhang.pipeline.core.context.TaskContext;
 import priv.ethanzhang.pipeline.core.event.TaskFailedEvent;
@@ -23,7 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class ExcelTask {
+public class MultiProcessorExcelTask {
 
     @Test
     public void test() throws InterruptedException {
@@ -31,14 +28,13 @@ public class ExcelTask {
         File excel = new File("src/main/resources/demo1.xlsx");
         File target = new File("src/main/resources/demo2.txt");
 
-        PipeTask<ReaderItem, JSONObject> task = LocalPipeTaskBuilder.<ReaderItem, JSONObject>newBuilder()
+        PipeTask<ExcelTask.ReaderItem, JSONObject> task = LocalPipeTaskBuilder.<ExcelTask.ReaderItem, JSONObject>newBuilder()
                 .taskId(String.valueOf(System.currentTimeMillis()))
-                .reader(new EasyExcelReader<>(excel, ReaderItem.class))
-                .processor(new Processor())
+                .reader(new EasyExcelReader<>(excel, ExcelTask.ReaderItem.class))
+                .processorChain(new ProcessorA())
+                .end(new ProcessorB())
                 .writer(new TextLinesWriter<>(target))
                 .reportPeriod(Duration.ofSeconds(5))
-                .readBufferSize(1000)
-                .writeBufferSize(1000)
                 .build();
 
         task.addSubscriber(event -> System.out.println("lifecycle event ..."));
@@ -51,32 +47,20 @@ public class ExcelTask {
         new CountDownLatch(1).await(1, TimeUnit.HOURS);
     }
 
-    @Data
-    public static class ReaderItem {
-
-        @ExcelProperty("trade_order_no")
-        private String tradeOrderNo;
-
-        @ExcelProperty("status")
-        private String status;
-
-        @ExcelProperty("remark")
-        private String remark;
-
-        @ExcelProperty("create_dt")
-        private String createDt;
-
+    public static class ProcessorA implements PipeProcessor<ExcelTask.ReaderItem, String> {
+        @Override
+        public DataChunk<String> process(TaskContext<ExcelTask.ReaderItem, ?> context, DataChunk<ExcelTask.ReaderItem> input) {
+            ThreadUtil.sleep(10, TimeUnit.MILLISECONDS);
+            return DataChunk.of(input.stream().map(JSON::toJSONString).collect(Collectors.toList()));
+        }
     }
 
-    @TaskConfig(interruptFor = IllegalArgumentException.class)
-    public static class Processor implements PipeProcessor<ReaderItem, JSONObject> {
-
+    public static class ProcessorB implements PipeProcessor<String, JSONObject> {
         @Override
-        public DataChunk<JSONObject> process(TaskContext<ReaderItem, ?> context, DataChunk<ReaderItem> input) {
-            ThreadUtil.sleep(20, TimeUnit.MILLISECONDS);
-            return DataChunk.of(input.stream().map(i -> JSON.parseObject(JSON.toJSONString(i))).collect(Collectors.toList()));
+        public DataChunk<JSONObject> process(TaskContext<String, ?> context, DataChunk<String> input) {
+            ThreadUtil.sleep(10, TimeUnit.MILLISECONDS);
+            return DataChunk.of(input.stream().map(JSON::parseObject).collect(Collectors.toList()));
         }
-
     }
 
 }
