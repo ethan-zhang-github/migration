@@ -9,7 +9,7 @@ import priv.ethanzhang.pipeline.core.event.dispatcher.TaskEventDispatcher;
 import priv.ethanzhang.pipeline.core.event.subscriber.PipeTaskEventSubscriber;
 import priv.ethanzhang.pipeline.core.executor.TaskExecutor;
 import priv.ethanzhang.pipeline.core.manager.TaskManager;
-import priv.ethanzhang.pipeline.core.processor.PipeProcessor;
+import priv.ethanzhang.pipeline.core.processor.PipeProcessorChain;
 import priv.ethanzhang.pipeline.core.reader.PipeReader;
 import priv.ethanzhang.pipeline.core.reporter.TaskReporter;
 import priv.ethanzhang.pipeline.core.writer.PipeWriter;
@@ -30,7 +30,7 @@ public class PipeTask<I, O> {
 
     private PipeReader<I> reader;
 
-    private PipeProcessor<I, O> processor;
+    private PipeProcessorChain<I, O> processorChain;
 
     private PipeWriter<O> writer;
 

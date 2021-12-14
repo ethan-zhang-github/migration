@@ -5,6 +5,8 @@ import priv.ethanzhang.pipeline.core.utils.DateTimeFormatters;
 
 import java.time.Instant;
 import java.util.EnumMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class PipeTaskAttributes {
 
@@ -14,7 +16,7 @@ public class PipeTaskAttributes {
         PipeTaskAttributes attributes = new PipeTaskAttributes();
         attributes.set(AttributeType.TASK_ID, task.getTaskId());
         attributes.set(AttributeType.READER_TYPE, task.getReader().getClass());
-        attributes.set(AttributeType.PROCESSOR_TYPE, task.getProcessor().getClass());
+        attributes.set(AttributeType.PROCESSOR_TYPE, task.getProcessorChain().getProcessorTypes());
         attributes.set(AttributeType.WRITER_TYPE, task.getWriter().getClass());
         attributes.set(AttributeType.PARAMETER, task.getContext().getParameter());
         attributes.set(AttributeType.READER_BUFFER_SIZE, task.getContext().getReadBuffer().size());
@@ -48,7 +50,8 @@ public class PipeTaskAttributes {
         StringBuilder builder = new StringBuilder();
         builder.append(String.format("TASK_ID: [%s]%s", get(PipeTaskAttributes.AttributeType.TASK_ID), separator));
         builder.append(String.format("READER_TYPE: [%s]%s", get(AttributeType.READER_TYPE), separator));
-        builder.append(String.format("PROCESSOR_TYPE: [%s]%s", get(AttributeType.PROCESSOR_TYPE), separator));
+        List<Class<?>> processorTypes = get(AttributeType.PROCESSOR_TYPE);
+        builder.append(String.format("PROCESSOR_TYPE: [%s]%s", processorTypes.stream().map(Class::toString).collect(Collectors.joining(" -> ")), separator));
         builder.append(String.format("WRITER_TYPE: [%s]%s", get(AttributeType.WRITER_TYPE), separator));
         TaskParameter parameter = get(AttributeType.PARAMETER);
         if (parameter != null) {

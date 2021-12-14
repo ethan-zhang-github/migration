@@ -8,11 +8,15 @@ import priv.ethanzhang.pipeline.core.context.TaskParameter;
 import priv.ethanzhang.pipeline.core.executor.LocalTaskExecutor;
 import priv.ethanzhang.pipeline.core.manager.LocalTaskManager;
 import priv.ethanzhang.pipeline.core.processor.PipeProcessor;
+import priv.ethanzhang.pipeline.core.processor.PipeProcessorChain;
+import priv.ethanzhang.pipeline.core.processor.PipeProcessorNode;
 import priv.ethanzhang.pipeline.core.reader.PipeReader;
 import priv.ethanzhang.pipeline.core.reporter.TaskReporter;
 import priv.ethanzhang.pipeline.core.writer.PipeWriter;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
@@ -45,9 +49,22 @@ public class LocalPipeTaskBuilder<I, O> extends AbstractPipeTaskBuilder<I, O> {
         return this;
     }
 
-    public LocalPipeTaskBuilder<I, O> processor(PipeProcessor<I, O> processor) {
-        this.processor = processor;
+    public LocalPipeTaskBuilder<I, O> processor(PipeProcessor<I, O> processor, int bufferSize) {
+        this.processorChain = new PipeProcessorChain<>(new PipeProcessorNode<>(processor, bufferSize));
         return this;
+    }
+
+    public LocalPipeTaskBuilder<I, O> processor(PipeProcessor<I, O> processor) {
+        this.processorChain = new PipeProcessorChain<>(new PipeProcessorNode<>(processor, GlobalConfig.BUFFER.getBufferSize()));
+        return this;
+    }
+
+    public <T, R> ProcessorChainBuilder<T, R> processorChain(PipeProcessor<T, R> processor, int bufferSize) {
+        return new ProcessorChainBuilder<>(processor, bufferSize);
+    }
+
+    public <T, R> ProcessorChainBuilder<T, R> processorChain(PipeProcessor<T, R> processor) {
+        return new ProcessorChainBuilder<>(processor, GlobalConfig.BUFFER.getBufferSize());
     }
 
     public LocalPipeTaskBuilder<I, O> writer(PipeWriter<O> writer) {
@@ -122,6 +139,31 @@ public class LocalPipeTaskBuilder<I, O> extends AbstractPipeTaskBuilder<I, O> {
                 .readBuffer(dataBuffer.apply(readBufferSize))
                 .writeBuffer(dataBuffer.apply(writeBufferSize))
                 .build();
+    }
+
+    public class ProcessorChainBuilder<T, R> {
+
+        private final LinkedList<PipeProcessorNode<?, ?>> nodes;
+
+        private ProcessorChainBuilder(PipeProcessor<T, R> processor, int bufferSize) {
+            this.nodes = new LinkedList<>(Collections.singleton(new PipeProcessorNode<>(processor, bufferSize)));
+        }
+
+        private ProcessorChainBuilder(LinkedList<PipeProcessorNode<?, ?>> nodes) {
+            this.nodes = nodes;
+        }
+
+        public <V> ProcessorChainBuilder<T, V> then(PipeProcessor<? super R, ? extends V> processor, int bufferSize) {
+            PipeProcessorNode<? super R, ? extends V> node = new PipeProcessorNode<>(processor, bufferSize);
+            nodes.add(node);
+            return new ProcessorChainBuilder<>(nodes);
+        }
+
+        public LocalPipeTaskBuilder<I, O> end() {
+            LocalPipeTaskBuilder.this.processorChain = new PipeProcessorChain<I, O>(nodes);
+            return LocalPipeTaskBuilder.this;
+        }
+
     }
 
 }

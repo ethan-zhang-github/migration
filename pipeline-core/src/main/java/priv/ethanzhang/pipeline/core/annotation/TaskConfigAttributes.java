@@ -1,5 +1,9 @@
 package priv.ethanzhang.pipeline.core.annotation;
 
+import com.github.rholder.retry.Retryer;
+import com.github.rholder.retry.RetryerBuilder;
+import com.github.rholder.retry.StopStrategies;
+import com.github.rholder.retry.WaitStrategies;
 import lombok.Getter;
 import lombok.Setter;
 import priv.ethanzhang.pipeline.core.config.GlobalConfig;
@@ -10,6 +14,7 @@ import priv.ethanzhang.pipeline.core.writer.PipeWriter;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Getter
@@ -62,6 +67,14 @@ public class TaskConfigAttributes {
             return true;
         }
         return true;
+    }
+
+    public Retryer<Boolean> buidlRetryer() {
+        return RetryerBuilder.<Boolean>newBuilder()
+                .retryIfResult(Boolean.FALSE::equals)
+                .withStopStrategy(StopStrategies.stopAfterAttempt(this.getMaxProduceRetryTimes()))
+                .withWaitStrategy(WaitStrategies.fixedWait(this.getProduceRetryPeriodSeconds(), TimeUnit.SECONDS))
+                .build();
     }
 
 }

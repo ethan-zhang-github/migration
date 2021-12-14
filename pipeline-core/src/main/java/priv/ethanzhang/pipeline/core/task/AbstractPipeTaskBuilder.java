@@ -4,7 +4,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import priv.ethanzhang.pipeline.core.config.GlobalConfig;
 import priv.ethanzhang.pipeline.core.context.TaskContext;
 import priv.ethanzhang.pipeline.core.context.TaskParameter;
-import priv.ethanzhang.pipeline.core.processor.PipeProcessor;
+import priv.ethanzhang.pipeline.core.processor.PipeProcessorChain;
 import priv.ethanzhang.pipeline.core.reader.PipeReader;
 import priv.ethanzhang.pipeline.core.reporter.CompositeTaskReporter;
 import priv.ethanzhang.pipeline.core.reporter.TaskReporter;
@@ -21,7 +21,7 @@ public abstract class AbstractPipeTaskBuilder<I, O> {
 
     protected PipeReader<I> reader;
 
-    protected PipeProcessor<I, O> processor;
+    protected PipeProcessorChain<I, O> processorChain;
 
     protected PipeWriter<O> writer;
 
@@ -41,7 +41,7 @@ public abstract class AbstractPipeTaskBuilder<I, O> {
         PipeTask<I, O> task = new PipeTask<>();
         task.setTaskId(taskId);
         task.setReader(reader);
-        task.setProcessor(processor);
+        task.setProcessorChain(processorChain);
         task.setWriter(writer);
         if (CollectionUtils.isNotEmpty(reporters)) {
             task.setReporter(new CompositeTaskReporter(reporters));

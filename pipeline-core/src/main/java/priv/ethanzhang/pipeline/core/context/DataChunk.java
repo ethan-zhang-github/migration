@@ -42,7 +42,7 @@ public abstract class DataChunk<T> implements Iterable<T> {
         return (EmptyDataChunk<T>) EmptyDataChunk.INSTANCE;
     }
 
-    public static <T> DataChunk<T> of(Collection<T> data) {
+    public static <T> DataChunk<T> of(Collection<? extends T> data) {
         return new ArrayListDataChunk<>(data);
     }
 
@@ -50,7 +50,7 @@ public abstract class DataChunk<T> implements Iterable<T> {
 
         private List<T> data;
 
-        private ArrayListDataChunk(Collection<T> data) {
+        private ArrayListDataChunk(Collection<? extends T> data) {
             ArrayListDataChunk.this.data = new ArrayList<>(data);
         }
 
