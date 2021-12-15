@@ -1,6 +1,0 @@
-/Users/ethanzhang/IdeaProjects/migration/pipeline-example/src/main/java/priv/ethanzhang/pipeline/example/generic/GenericTest.java
-/Users/ethanzhang/IdeaProjects/migration/pipeline-example/src/main/java/priv/ethanzhang/pipeline/example/event/MyTaskEventSubscriber.java
-/Users/ethanzhang/IdeaProjects/migration/pipeline-example/src/main/java/priv/ethanzhang/pipeline/example/scheduler/TestScheduledService.java
-/Users/ethanzhang/IdeaProjects/migration/pipeline-example/src/main/java/priv/ethanzhang/pipeline/example/retry/RetryTest.java
-/Users/ethanzhang/IdeaProjects/migration/pipeline-example/src/main/java/priv/ethanzhang/pipeline/example/task/ExcelTask.java
-/Users/ethanzhang/IdeaProjects/migration/pipeline-example/src/main/java/priv/ethanzhang/pipeline/example/buffer/DisruptorTest.java
