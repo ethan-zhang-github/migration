@@ -2,11 +2,10 @@ package com.aihuishou.pipeline.core.manager;
 
 import com.aihuishou.pipeline.core.config.GlobalConfig;
 import com.aihuishou.pipeline.core.context.TaskState;
-import com.aihuishou.core.event.*;
+import com.aihuishou.pipeline.core.event.*;
 import com.aihuishou.pipeline.core.event.dispatcher.TaskEventDispatcher;
 import com.aihuishou.pipeline.core.event.subscriber.GenericTaskEventSubscriber;
 import com.aihuishou.pipeline.core.task.PipeTask;
-import com.aihuishou.pipeline.core.event.*;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
