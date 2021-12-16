@@ -1,14 +1,14 @@
 package com.aihuishou.pipeline.example.event;
 
-import com.aihuishou.core.event.TaskEvent;
-import com.aihuishou.core.event.TaskFailedEvent;
-import com.aihuishou.core.event.TaskWarnningEvent;
+import com.aihuishou.pipeline.core.event.TaskEvent;
+import com.aihuishou.pipeline.core.event.TaskFailedEvent;
+import com.aihuishou.pipeline.core.event.TaskWarnningEvent;
 import org.junit.Test;
-import com.aihuishou.core.event.dispatcher.GuavaTaskEventDispatcher;
-import com.aihuishou.core.event.subscriber.TaskEventSubscriber;
-import com.aihuishou.core.reader.EasyExcelReader;
-import com.aihuishou.core.reader.PipeReader;
-import com.aihuishou.core.utils.GenericUtil;
+import com.aihuishou.pipeline.core.event.dispatcher.GuavaTaskEventDispatcher;
+import com.aihuishou.pipeline.core.event.subscriber.TaskEventSubscriber;
+import com.aihuishou.pipeline.core.reader.EasyExcelReader;
+import com.aihuishou.pipeline.core.reader.PipeReader;
+import com.aihuishou.pipeline.core.utils.GenericUtil;
 
 import java.io.File;
 

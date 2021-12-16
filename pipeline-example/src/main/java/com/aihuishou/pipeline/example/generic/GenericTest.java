@@ -3,7 +3,7 @@ package com.aihuishou.pipeline.example.generic;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.junit.Test;
-import com.aihuishou.core.utils.GenericUtil;
+import com.aihuishou.pipeline.core.utils.GenericUtil;
 
 import java.util.function.Consumer;
 
