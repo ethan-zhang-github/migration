@@ -2,4 +2,6 @@
 
 ![pipeline](pipeline.jpg)
 
+![pipeline-structure](pipeline-structure.jpg)
+
 ## pipeline-core

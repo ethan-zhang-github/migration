@@ -8,6 +8,7 @@ import com.aihuishou.pipeline.core.event.subscriber.GenericTaskEventSubscriber;
 import com.aihuishou.pipeline.core.task.PipeTask;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Instant;
 import java.util.Map;
 
 /**
@@ -72,6 +73,7 @@ public enum LocalTaskManager implements TaskManager {
             @Override
             protected void subscribeInternal(TaskFinishedEvent event) {
                 PipeTask<?, ?> task = event.getTask();
+                task.getContext().setFinishTimestamp(Instant.now());
                 task.getReporter().report(task);
                 task.getDispatcher().clearTaskEventStream(task.getTaskId());
                 registry.unregister(task);
