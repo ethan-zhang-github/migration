@@ -1,6 +1,5 @@
 package com.aihuishou.pipeline.core.task;
 
-import org.apache.commons.collections4.CollectionUtils;
 import com.aihuishou.pipeline.core.config.GlobalConfig;
 import com.aihuishou.pipeline.core.context.TaskContext;
 import com.aihuishou.pipeline.core.context.TaskParameter;
@@ -9,10 +8,13 @@ import com.aihuishou.pipeline.core.reader.PipeReader;
 import com.aihuishou.pipeline.core.reporter.CompositeTaskReporter;
 import com.aihuishou.pipeline.core.reporter.TaskReporter;
 import com.aihuishou.pipeline.core.writer.PipeWriter;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Supplier;
 
 public abstract class AbstractPipeTaskBuilder<I, O> {
@@ -39,7 +41,7 @@ public abstract class AbstractPipeTaskBuilder<I, O> {
 
     public PipeTask<I, O> build() {
         PipeTask<I, O> task = new PipeTask<>();
-        task.setTaskId(taskId);
+        task.setTaskId(Optional.ofNullable(taskId).orElse(UUID.randomUUID().toString()));
         task.setReader(reader);
         task.setProcessorChain(processorChain);
         task.setWriter(writer);
