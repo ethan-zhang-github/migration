@@ -1,5 +1,6 @@
 package com.aihuishou.pipeline.core.reporter;
 
+import com.aihuishou.pipeline.core.event.TaskLifecycleEvent;
 import com.aihuishou.pipeline.core.task.PipeTask;
 
 /**
@@ -9,5 +10,7 @@ import com.aihuishou.pipeline.core.task.PipeTask;
 public interface TaskReporter {
 
     void report(PipeTask<?, ?> task);
+
+    void reportEvent(TaskLifecycleEvent event);
 
 }

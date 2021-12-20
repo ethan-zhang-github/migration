@@ -65,4 +65,11 @@ public abstract class AbstractTaskExecutor<I, O> implements TaskExecutor<I, O> {
         }
     }
 
+    @Override
+    public void join(PipeTask<I, O> task) {
+        readerExecutor.join(task, task.getReader());
+        processorExecutor.join(task, task.getProcessorChain());
+        writerExecutor.join(task, task.getWriter());
+    }
+
 }

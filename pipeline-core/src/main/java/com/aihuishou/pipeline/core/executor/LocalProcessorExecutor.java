@@ -13,6 +13,7 @@ import com.aihuishou.pipeline.core.task.PipeTask;
 import com.aihuishou.pipeline.core.utils.ThreadUtil;
 import com.github.rholder.retry.RetryException;
 import com.github.rholder.retry.Retryer;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -151,6 +152,16 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
             processorFutures.forEach(future -> future.cancel(true));
         } else {
             throw new TaskExecutionException("The processor can not shutdown on this state!");
+        }
+    }
+
+    @SuppressWarnings("all")
+    @Override
+    public void join(PipeTask<I, O> task, PipeProcessorChain<I, O> processorChain) {
+        try {
+            Futures.allAsList(processorFutures).get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new TaskExecutionException("The processor join failed!", e);
         }
     }
 

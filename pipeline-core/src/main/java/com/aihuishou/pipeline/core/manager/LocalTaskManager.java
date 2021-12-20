@@ -55,6 +55,7 @@ public enum LocalTaskManager implements TaskManager {
             protected void subscribeInternal(TaskStartedEvent event) {
                 PipeTask<?, ?> task = event.getTask();
                 log.info("Task [{}] started...", task.getTaskId());
+                task.getReporter().reportEvent(event);
                 task.getReporter().report(task);
                 registry.register(task);
             }
@@ -63,6 +64,7 @@ public enum LocalTaskManager implements TaskManager {
             @Override
             protected void subscribeInternal(TaskShutdownEvent event) {
                 PipeTask<?, ?> task = event.getTask();
+                task.getReporter().reportEvent(event);
                 task.getReporter().report(task);
                 task.getDispatcher().clearTaskEventStream(task.getTaskId());
                 registry.unregister(task);
@@ -73,6 +75,7 @@ public enum LocalTaskManager implements TaskManager {
             @Override
             protected void subscribeInternal(TaskFinishedEvent event) {
                 PipeTask<?, ?> task = event.getTask();
+                task.getReporter().reportEvent(event);
                 task.getContext().setFinishTimestamp(Instant.now());
                 task.getReporter().report(task);
                 task.getDispatcher().clearTaskEventStream(task.getTaskId());
@@ -84,6 +87,7 @@ public enum LocalTaskManager implements TaskManager {
             @Override
             protected void subscribeInternal(TaskFailedEvent event) {
                 PipeTask<?, ?> task = event.getTask();
+                task.getReporter().reportEvent(event);
                 task.getContext().setReaderState(TaskState.FAILED);
                 task.getContext().setProcessorState(TaskState.FAILED);
                 task.getContext().setWriterState(TaskState.FAILED);
@@ -97,6 +101,7 @@ public enum LocalTaskManager implements TaskManager {
             @Override
             protected void subscribeInternal(TaskEvictedEvent event) {
                 PipeTask<?, ?> task = event.getTask();
+                task.getReporter().reportEvent(event);
                 task.getReporter().report(task);
                 task.getDispatcher().clearTaskEventStream(task.getTaskId());
                 registry.unregister(task);
@@ -107,7 +112,7 @@ public enum LocalTaskManager implements TaskManager {
             @Override
             protected void subscribeInternal(TaskWarnningEvent event) {
                 PipeTask<?, ?> task = event.getTask();
-                log.warn("Task [{}] warnning, cause: {}, e: {}", task.getTaskId(), event.getCause(), event.getThrowable());
+                task.getReporter().reportEvent(event);
             }
         });
     }

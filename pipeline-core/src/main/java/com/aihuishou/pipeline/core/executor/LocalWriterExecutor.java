@@ -19,6 +19,7 @@ import com.aihuishou.pipeline.core.writer.PipeWriter;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -101,6 +102,15 @@ public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
             Optional.ofNullable(writerFuture).ifPresent(t -> t.cancel(true));
         } else {
             throw new TaskExecutionException("The writer can not shutdown on this state!");
+        }
+    }
+
+    @Override
+    public void join(PipeTask<I, O> task, PipeWriter<O> writer) {
+        try {
+            writerFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new TaskExecutionException("The writer join failed!", e);
         }
     }
 

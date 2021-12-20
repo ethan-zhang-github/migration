@@ -1,5 +1,6 @@
 package com.aihuishou.pipeline.core.reporter;
 
+import com.aihuishou.pipeline.core.event.TaskLifecycleEvent;
 import com.aihuishou.pipeline.core.task.PipeTask;
 
 import java.util.ArrayList;
@@ -23,6 +24,11 @@ public class CompositeTaskReporter implements TaskReporter {
     @Override
     public void report(PipeTask<?, ?> task) {
         delegate.forEach(reporter -> reporter.report(task));
+    }
+
+    @Override
+    public void reportEvent(TaskLifecycleEvent event) {
+        delegate.forEach(reporter -> reporter.reportEvent(event));
     }
 
     public void addReporter(TaskReporter reporter) {

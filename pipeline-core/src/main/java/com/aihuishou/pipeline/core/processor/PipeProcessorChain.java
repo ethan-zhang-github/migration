@@ -26,7 +26,7 @@ public class PipeProcessorChain<I, O> {
     }
 
     public List<Class<?>> getProcessorTypes() {
-        return nodes.stream().map(Object::getClass).collect(Collectors.toList());
+        return nodes.stream().map(PipeProcessorNode::getProcessor).map(Object::getClass).collect(Collectors.toList());
     }
 
 }

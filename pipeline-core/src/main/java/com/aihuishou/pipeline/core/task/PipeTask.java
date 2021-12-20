@@ -58,6 +58,10 @@ public class PipeTask<I, O> {
         executor.shutDown(this);
     }
 
+    public void join() {
+        executor.join(this);
+    }
+
     public void addSubscriber(Consumer<TaskLifecycleEvent> subscriber) {
         addSubscriber(subscriber, TaskLifecycleEvent.class);
     }

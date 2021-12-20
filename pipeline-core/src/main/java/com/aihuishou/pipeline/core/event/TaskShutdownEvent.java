@@ -12,4 +12,9 @@ public class TaskShutdownEvent extends TaskLifecycleEvent {
         super(task);
     }
 
+    @Override
+    public String toString() {
+        return String.format("TaskShutdownEvent occured, taskId: %s, timestamp: %s", task.getTaskId(), timestamp);
+    }
+
 }

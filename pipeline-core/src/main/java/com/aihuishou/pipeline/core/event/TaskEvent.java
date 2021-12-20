@@ -11,6 +11,6 @@ import java.time.Instant;
 @Getter
 public abstract class TaskEvent {
 
-    private final Instant timestamp = Instant.now();
+    protected final Instant timestamp = Instant.now();
 
 }

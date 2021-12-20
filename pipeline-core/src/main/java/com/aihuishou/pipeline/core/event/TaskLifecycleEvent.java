@@ -12,7 +12,7 @@ import java.util.Objects;
 @Getter
 public abstract class TaskLifecycleEvent extends TaskEvent {
 
-    private final PipeTask<?, ?> task;
+    protected final PipeTask<?, ?> task;
 
     public TaskLifecycleEvent(PipeTask<?, ?> task) {
         Objects.requireNonNull(task);

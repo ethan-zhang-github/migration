@@ -26,4 +26,9 @@ public interface WriterExecutor<I, O> {
      */
     void shutDown(PipeTask<I, O> task, PipeWriter<O> writer);
 
+    /**
+     * 同步返回
+     */
+    void join(PipeTask<I, O> task, PipeWriter<O> writer);
+
 }

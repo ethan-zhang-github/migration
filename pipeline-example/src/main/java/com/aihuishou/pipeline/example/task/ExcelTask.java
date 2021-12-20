@@ -1,5 +1,6 @@
 package com.aihuishou.pipeline.example.task;
 
+import com.aihuishou.pipeline.core.buffer.BlockingQueueDataBuffer;
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
@@ -36,9 +37,10 @@ public class ExcelTask {
                 .reader(new EasyExcelReader<>(excel, ReaderItem.class))
                 .processor(new Processor())
                 .writer(new TextLinesWriter<>(target))
-                .reportPeriod(Duration.ofSeconds(5))
-                .readBufferSize(1000)
-                .writeBufferSize(1000)
+                .reportPeriod(Duration.ofSeconds(10))
+                .readBufferSize(1 << 11)
+                .writeBufferSize(1 << 11)
+                //.bufferType(BlockingQueueDataBuffer::new)
                 .build();
 
         task.addSubscriber(event -> System.out.println("lifecycle event ..."));
@@ -46,9 +48,7 @@ public class ExcelTask {
         task.addSubscriber(event -> System.out.println("failed event ..."), TaskFailedEvent.class);
 
         task.start();
-
-
-        new CountDownLatch(1).await(1, TimeUnit.HOURS);
+        task.join();
     }
 
     @Data

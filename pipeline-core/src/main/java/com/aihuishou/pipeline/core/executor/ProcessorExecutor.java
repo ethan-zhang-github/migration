@@ -26,4 +26,9 @@ public interface ProcessorExecutor<I, O> {
      */
     void shutDown(PipeTask<I, O> task, PipeProcessorChain<I, O> processorChain);
 
+    /**
+     * 同步返回
+     */
+    void join(PipeTask<I, O> task, PipeProcessorChain<I, O> processorChain);
+
 }

@@ -112,4 +112,13 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
         }
     }
 
+    @Override
+    public void join(PipeTask<I, O> task, PipeReader<I> reader) {
+        try {
+            readerFuture.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new TaskExecutionException("The reader join failed!", e);
+        }
+    }
+
 }

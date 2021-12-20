@@ -24,4 +24,9 @@ public interface TaskExecutor<I, O> {
      */
     void shutDown(PipeTask<I, O> task);
 
+    /**
+     * 同步返回
+     */
+    void join(PipeTask<I, O> task);
+
 }

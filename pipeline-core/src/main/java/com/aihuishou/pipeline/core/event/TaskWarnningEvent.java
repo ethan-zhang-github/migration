@@ -30,4 +30,10 @@ public class TaskWarnningEvent extends TaskLifecycleEvent {
 
     }
 
+    @Override
+    public String toString() {
+        return String.format("TaskFailedEvent occured, taskId: %s, timestamp: %s, cause: %s, throwable: %s",
+                task.getTaskId(), timestamp, cause, throwable.getMessage());
+    }
+
 }

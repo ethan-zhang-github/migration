@@ -12,4 +12,9 @@ public class TaskFinishedEvent extends TaskLifecycleEvent {
         super(task);
     }
 
+    @Override
+    public String toString() {
+        return String.format("TaskFinishedEvent occured, taskId: %s, timestamp: %s", task.getTaskId(), timestamp);
+    }
+
 }

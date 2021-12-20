@@ -18,4 +18,9 @@ public class TaskEvictedEvent extends TaskLifecycleEvent {
         this.cause = cause;
     }
 
+    @Override
+    public String toString() {
+        return String.format("TaskEvictedEvent occured, taskId: %s, timestamp: %s, cause: %s", task.getTaskId(), timestamp, cause);
+    }
+
 }
