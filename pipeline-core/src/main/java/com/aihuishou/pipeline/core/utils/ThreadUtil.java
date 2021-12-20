@@ -16,4 +16,8 @@ public class ThreadUtil {
         }
     }
 
+    public static void interrupt() {
+        Thread.currentThread().interrupt();
+    }
+
 }

@@ -1,29 +1,28 @@
-package com.aihuishou.pipeline.core.buffer;
+package com.aihuishou.pipeline.redisson.buffer;
 
+import com.aihuishou.pipeline.core.buffer.DataBuffer;
 import com.aihuishou.pipeline.core.utils.ThreadUtil;
-import lombok.extern.slf4j.Slf4j;
+import com.aihuishou.pipeline.redisson.constant.RedissonKey;
+import org.redisson.api.RBoundedBlockingQueue;
+import org.redisson.api.RedissonClient;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.UUID;
 
 /**
- * 数据缓冲区（基于阻塞式队列）
+ * 数据缓冲区（基于 redisson 有界阻塞式队列实现）
  * @param <T> 数据类型
  * @author ethan zhang
  */
-@Slf4j
-public class BlockingQueueDataBuffer<T> implements DataBuffer<T> {
+public class RedissonDataBuffer<T> implements DataBuffer<T> {
 
-    private final int capacity;
+    private final RBoundedBlockingQueue<T> queue;
 
-    private final BlockingQueue<T> queue;
-
-    public BlockingQueueDataBuffer(int capacity) {
-        this.capacity = capacity;
-        this.queue = new LinkedBlockingQueue<>(capacity);
+    public RedissonDataBuffer(RedissonClient redissonClient, int capacity) {
+        this.queue = redissonClient.getBoundedBlockingQueue(RedissonKey.REDISSON_DATA_BUFFER + UUID.randomUUID());
+        queue.trySetCapacity(capacity);
     }
 
     @Override
@@ -33,7 +32,7 @@ public class BlockingQueueDataBuffer<T> implements DataBuffer<T> {
 
     @Override
     public boolean isFull() {
-        return queue.size() >= capacity;
+        return queue.remainingCapacity() == 0;
     }
 
     @Override
@@ -43,7 +42,7 @@ public class BlockingQueueDataBuffer<T> implements DataBuffer<T> {
 
     @Override
     public int capacity() {
-        return capacity;
+        return queue.size() + queue.remainingCapacity();
     }
 
     @Override

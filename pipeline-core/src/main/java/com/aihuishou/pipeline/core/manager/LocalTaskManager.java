@@ -21,7 +21,7 @@ public enum LocalTaskManager implements TaskManager {
 
     private TaskRegistry registry;
 
-    private LocalReporterScheduler reporterScheduler;
+    private AbstractTaskScheduler taskScheduler;
 
     {
         initialize();
@@ -31,8 +31,8 @@ public enum LocalTaskManager implements TaskManager {
     public void initialize() {
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutDown));
         registry = new InMemoryTaskRegistry();
-        reporterScheduler = new LocalReporterScheduler(registry);
-        reporterScheduler.startAsync();
+        taskScheduler = new LocalReporterScheduler(registry);
+        taskScheduler.start();
         addSubscribers();
     }
 
@@ -45,7 +45,7 @@ public enum LocalTaskManager implements TaskManager {
             log.warn("Task [{}] has been shut down because local migration task manager has been shut down!", taskId);
         }));
         registry.clear();
-        reporterScheduler.stopAsync();
+        taskScheduler.shutdown();
     }
 
     private void addSubscribers() {

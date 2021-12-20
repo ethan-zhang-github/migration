@@ -14,7 +14,7 @@ import java.time.Instant;
  */
 public interface TaskContext<I, O> {
 
-    TaskParameter getParameter();
+    LocalTaskParameter getParameter();
 
     PipeTask<I, O> getTask();
 

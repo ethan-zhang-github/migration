@@ -5,7 +5,7 @@ import com.aihuishou.pipeline.core.buffer.DataBuffer;
 import com.aihuishou.pipeline.core.config.GlobalConfig;
 import com.aihuishou.pipeline.core.context.LocalTaskContext;
 import com.aihuishou.pipeline.core.context.TaskContext;
-import com.aihuishou.pipeline.core.context.TaskParameter;
+import com.aihuishou.pipeline.core.context.LocalTaskParameter;
 import com.aihuishou.pipeline.core.executor.LocalTaskExecutor;
 import com.aihuishou.pipeline.core.manager.LocalTaskManager;
 import com.aihuishou.pipeline.core.processor.PipeProcessorChain;
@@ -67,7 +67,7 @@ public class LocalPipeTaskBuilder<I, O> extends AbstractPipeTaskBuilder<I, O> {
         return this;
     }
 
-    public LocalPipeTaskBuilder<I, O> parameter(TaskParameter parameter) {
+    public LocalPipeTaskBuilder<I, O> parameter(LocalTaskParameter parameter) {
         this.parameter = parameter;
         return this;
     }

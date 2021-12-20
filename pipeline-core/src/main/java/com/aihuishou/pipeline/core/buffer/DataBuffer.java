@@ -54,6 +54,6 @@ public interface DataBuffer<T> {
     /**
      * 尝试消费固定数量的元素，若缓冲区的元素数量不足则消费所有可消费的元素
      */
-    List<T> consumeIfPossible(int maxsize);
+    List<T> consumeIfPossible(int maxElements);
 
 }

@@ -1,13 +1,13 @@
 package com.aihuishou.pipeline.core.config;
 
-import lombok.Getter;
-import lombok.Setter;
 import com.aihuishou.pipeline.core.buffer.DataBuffer;
 import com.aihuishou.pipeline.core.buffer.DisruptorDataBuffer;
 import com.aihuishou.pipeline.core.event.dispatcher.DisruptorTaskEventDispatcher;
 import com.aihuishou.pipeline.core.event.dispatcher.TaskEventDispatcher;
 import com.aihuishou.pipeline.core.reporter.LoggerTaskReporter;
 import com.aihuishou.pipeline.core.reporter.TaskReporter;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.time.Duration;
 import java.util.function.Function;
@@ -109,7 +109,7 @@ public interface GlobalConfig {
         /**
          * 任务最大过期时间
          */
-        private long expireSeconds = Long.MAX_VALUE;
+        private Duration timeout = Duration.ofDays(30);
 
     }
 

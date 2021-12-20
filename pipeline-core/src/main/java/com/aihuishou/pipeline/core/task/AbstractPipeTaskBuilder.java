@@ -2,7 +2,7 @@ package com.aihuishou.pipeline.core.task;
 
 import com.aihuishou.pipeline.core.config.GlobalConfig;
 import com.aihuishou.pipeline.core.context.TaskContext;
-import com.aihuishou.pipeline.core.context.TaskParameter;
+import com.aihuishou.pipeline.core.context.LocalTaskParameter;
 import com.aihuishou.pipeline.core.processor.PipeProcessorChain;
 import com.aihuishou.pipeline.core.reader.PipeReader;
 import com.aihuishou.pipeline.core.reporter.CompositeTaskReporter;
@@ -27,7 +27,7 @@ public abstract class AbstractPipeTaskBuilder<I, O> {
 
     protected PipeWriter<O> writer;
 
-    protected TaskParameter parameter;
+    protected LocalTaskParameter parameter;
 
     protected long total;
 
@@ -37,7 +37,7 @@ public abstract class AbstractPipeTaskBuilder<I, O> {
 
     protected Duration reportPeriod = GlobalConfig.REPORTER.getReportPeriod();
 
-    protected Duration timeout = Duration.ofSeconds(GlobalConfig.LOCAL_REGISTRY.getExpireSeconds());
+    protected Duration timeout = GlobalConfig.LOCAL_REGISTRY.getTimeout();
 
     public PipeTask<I, O> build() {
         PipeTask<I, O> task = new PipeTask<>();

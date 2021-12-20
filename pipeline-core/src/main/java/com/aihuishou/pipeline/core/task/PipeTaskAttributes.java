@@ -1,6 +1,6 @@
 package com.aihuishou.pipeline.core.task;
 
-import com.aihuishou.pipeline.core.context.TaskParameter;
+import com.aihuishou.pipeline.core.context.LocalTaskParameter;
 import com.aihuishou.pipeline.core.utils.DateTimeFormatters;
 
 import java.time.Instant;
@@ -34,6 +34,7 @@ public class PipeTaskAttributes {
         attributes.set(AttributeType.START_TIME, task.getContext().getStartTimestamp());
         attributes.set(AttributeType.FINISH_TIME, task.getContext().getFinishTimestamp());
         attributes.set(AttributeType.COST, task.getContext().getCost());
+        attributes.set(AttributeType.TIMEOUT, task.getContext().getTimeout());
         return attributes;
     }
 
@@ -53,7 +54,7 @@ public class PipeTaskAttributes {
         List<Class<?>> processorTypes = get(AttributeType.PROCESSOR_TYPE);
         builder.append(String.format("PROCESSOR_TYPE: [%s]%s", processorTypes.stream().map(Class::toString).collect(Collectors.joining(" -> ")), separator));
         builder.append(String.format("WRITER_TYPE: [%s]%s", get(AttributeType.WRITER_TYPE), separator));
-        TaskParameter parameter = get(AttributeType.PARAMETER);
+        LocalTaskParameter parameter = get(AttributeType.PARAMETER);
         if (parameter != null) {
             builder.append(String.format("PARAMETER: [%s]%s", parameter, separator));
         }
@@ -85,6 +86,7 @@ public class PipeTaskAttributes {
             builder.append(String.format("FINISH_TIME: [%s]%s", DateTimeFormatters.PATTERN_0.formatInstant(finishTime), separator));
         }
         builder.append(String.format("COST: [%s]%s", get(AttributeType.COST), separator));
+        builder.append(String.format("TIMEOUT: [%s]%s", get(AttributeType.TIMEOUT), separator));
         return builder.toString();
     }
 
@@ -109,7 +111,8 @@ public class PipeTaskAttributes {
         TOTAL,
         START_TIME,
         FINISH_TIME,
-        COST
+        COST,
+        TIMEOUT;
 
     }
 

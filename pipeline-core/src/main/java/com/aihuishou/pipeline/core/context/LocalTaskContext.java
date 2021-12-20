@@ -21,7 +21,7 @@ public class LocalTaskContext<I, O> implements TaskContext<I, O> {
 
     private final PipeTask<I, O> task;
 
-    private final TaskParameter parameter;
+    private final LocalTaskParameter parameter;
 
     private final DataBuffer<I> readBuffer;
 
@@ -50,7 +50,7 @@ public class LocalTaskContext<I, O> implements TaskContext<I, O> {
     private Duration timeout;
 
     @Override
-    public TaskParameter getParameter() {
+    public LocalTaskParameter getParameter() {
         return parameter;
     }
 
