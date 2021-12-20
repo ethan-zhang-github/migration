@@ -4,11 +4,11 @@ import com.aihuishou.pipeline.core.context.TaskContext;
 import com.aihuishou.pipeline.core.task.PipeTask;
 import com.google.common.util.concurrent.AbstractScheduledService;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 class LocalReporterScheduler extends AbstractScheduledService {
 
@@ -58,7 +58,7 @@ class LocalReporterScheduler extends AbstractScheduledService {
     @SuppressWarnings("all")
     @Override
     protected Scheduler scheduler() {
-        return Scheduler.newFixedRateSchedule(Duration.ofSeconds(5), Duration.ofSeconds(5));
+        return Scheduler.newFixedRateSchedule(5, 5, TimeUnit.SECONDS);
     }
 
 }
