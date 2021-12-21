@@ -1,6 +1,8 @@
 package com.aihuishou.pipeline.core.context;
 
 import com.aihuishou.pipeline.core.buffer.DataBuffer;
+import com.aihuishou.pipeline.core.common.Counter;
+import com.aihuishou.pipeline.core.common.Holder;
 import com.aihuishou.pipeline.core.task.PipeTask;
 
 import java.time.Duration;
@@ -14,7 +16,7 @@ import java.time.Instant;
  */
 public interface TaskContext<I, O> {
 
-    LocalTaskParameter getParameter();
+    TaskParameter getParameter();
 
     PipeTask<I, O> getTask();
 
@@ -22,60 +24,38 @@ public interface TaskContext<I, O> {
 
     DataBuffer<O> getWriteBuffer();
 
-    long getReadCount();
+    Counter getReadCounter();
 
-    void incrReadCount(long count);
+    Counter getProcessedCounter();
 
-    long getProcessedCount();
+    Counter getWrittenCounter();
 
-    void incrProcessedCount(long count);
+    Holder<TaskState> getReaderState();
 
-    long getWrittenCount();
+    Holder<TaskState> getProcessorState();
 
-    void incrWrittenCount(long count);
+    Holder<TaskState> getWriterState();
 
-    TaskState getReaderState();
+    Holder<Long> getTotal();
 
-    TaskState getProcessorState();
+    Holder<Instant> getStartTimestamp();
 
-    TaskState getWriterState();
-
-    void setReaderState(TaskState state);
-
-    void setProcessorState(TaskState state);
-
-    void setWriterState(TaskState state);
-
-    long getTotal();
-
-    void setTotal(long total);
-
-    Instant getStartTimestamp();
-
-    void setStartTimestamp(Instant instant);
-
-    Instant getFinishTimestamp();
-
-    void setFinishTimestamp(Instant instant);
+    Holder<Instant> getFinishTimestamp();
 
     Duration getCost();
 
-    void setReportPeriod(Duration reportPeriod);
+    Holder<Duration> getReportPeriod();
 
-    Duration getReportPeriod();
-
-    void setTimeout(Duration timeout);
-
-    Duration getTimeout();
+    Holder<Duration> getTimeout();
 
     boolean isTimeout();
 
     default boolean isTerminated() {
-        return getReaderState() == TaskState.TERMINATED && getProcessorState() == TaskState.TERMINATED && getWriterState() == TaskState.TERMINATED;
+        return getReaderState().get() == TaskState.TERMINATED && getProcessorState().get() == TaskState.TERMINATED && getWriterState().get() == TaskState.TERMINATED;
     }
 
     default boolean isFailed() {
-        return getReaderState() == TaskState.FAILED || getProcessorState() == TaskState.FAILED || getWriterState() == TaskState.FAILED;
+        return getReaderState().get() == TaskState.FAILED || getProcessorState().get() == TaskState.FAILED || getWriterState().get() == TaskState.FAILED;
     }
 
 }

@@ -6,7 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 /**
  * 任务参数
  */
-public class LocalTaskParameter {
+public class LocalTaskParameter implements TaskParameter {
 
     private final JSONObject parameters;
 
@@ -22,15 +22,18 @@ public class LocalTaskParameter {
         return new LocalTaskParameter(JSON.parseObject(json));
     }
 
+    @Override
     public LocalTaskParameter addParameter(String key, Object value) {
         parameters.put(key, value);
         return this;
     }
 
+    @Override
     public String getString(String key) {
         return parameters.getString(key);
     }
 
+    @Override
     public <T> T getObject(String key, Class<T> clazz) {
         return parameters.getObject(key, clazz);
     }

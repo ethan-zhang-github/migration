@@ -1,8 +1,8 @@
 package com.aihuishou.pipeline.core.task;
 
 import com.aihuishou.pipeline.core.config.GlobalConfig;
-import com.aihuishou.pipeline.core.context.TaskContext;
 import com.aihuishou.pipeline.core.context.LocalTaskParameter;
+import com.aihuishou.pipeline.core.context.TaskContext;
 import com.aihuishou.pipeline.core.processor.PipeProcessorChain;
 import com.aihuishou.pipeline.core.reader.PipeReader;
 import com.aihuishou.pipeline.core.reporter.CompositeTaskReporter;
@@ -52,9 +52,9 @@ public abstract class AbstractPipeTaskBuilder<I, O> {
         }
         customBuild(task);
         TaskContext<I, O> context = buildContext(task);
-        context.setTotal(total > 0 ? total : totalSupplier != null ? totalSupplier.get() : -1L);
-        context.setReportPeriod(reportPeriod);
-        context.setTimeout(timeout);
+        context.getTotal().set(total > 0 ? total : totalSupplier != null ? totalSupplier.get() : -1L);
+        context.getReportPeriod().set(reportPeriod);
+        context.getTimeout().set(timeout);
         task.setContext(context);
         return task;
     }

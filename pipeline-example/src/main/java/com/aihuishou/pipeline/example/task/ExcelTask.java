@@ -1,11 +1,5 @@
 package com.aihuishou.pipeline.example.task;
 
-import com.aihuishou.pipeline.core.buffer.BlockingQueueDataBuffer;
-import com.alibaba.excel.annotation.ExcelProperty;
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
-import lombok.Data;
-import org.junit.Test;
 import com.aihuishou.pipeline.core.annotation.TaskConfig;
 import com.aihuishou.pipeline.core.context.DataChunk;
 import com.aihuishou.pipeline.core.context.TaskContext;
@@ -17,10 +11,14 @@ import com.aihuishou.pipeline.core.task.LocalPipeTaskBuilder;
 import com.aihuishou.pipeline.core.task.PipeTask;
 import com.aihuishou.pipeline.core.utils.ThreadUtil;
 import com.aihuishou.pipeline.core.writer.TextLinesWriter;
+import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import lombok.Data;
+import org.junit.Test;
 
 import java.io.File;
 import java.time.Duration;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -40,7 +38,6 @@ public class ExcelTask {
                 .reportPeriod(Duration.ofSeconds(10))
                 .readBufferSize(1 << 11)
                 .writeBufferSize(1 << 11)
-                //.bufferType(BlockingQueueDataBuffer::new)
                 .build();
 
         task.addSubscriber(event -> System.out.println("lifecycle event ..."));
@@ -49,6 +46,8 @@ public class ExcelTask {
 
         task.start();
         task.join();
+
+        ThreadUtil.sleep(5, TimeUnit.SECONDS);
     }
 
     @Data

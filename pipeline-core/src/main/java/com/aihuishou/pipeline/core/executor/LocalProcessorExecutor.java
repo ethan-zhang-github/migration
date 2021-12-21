@@ -8,7 +8,10 @@ import com.aihuishou.pipeline.core.context.TaskState;
 import com.aihuishou.pipeline.core.event.TaskFailedEvent;
 import com.aihuishou.pipeline.core.event.TaskWarnningEvent;
 import com.aihuishou.pipeline.core.event.dispatcher.TaskEventDispatcher;
+import com.aihuishou.pipeline.core.exception.TaskExecutionException;
 import com.aihuishou.pipeline.core.processor.PipeProcessor;
+import com.aihuishou.pipeline.core.processor.PipeProcessorChain;
+import com.aihuishou.pipeline.core.processor.PipeProcessorNode;
 import com.aihuishou.pipeline.core.task.PipeTask;
 import com.aihuishou.pipeline.core.utils.ThreadUtil;
 import com.github.rholder.retry.RetryException;
@@ -19,9 +22,6 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
-import com.aihuishou.pipeline.core.exception.TaskExecutionException;
-import com.aihuishou.pipeline.core.processor.PipeProcessorChain;
-import com.aihuishou.pipeline.core.processor.PipeProcessorNode;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -45,8 +45,8 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
     @Override
     public void start(PipeTask<I, O> task, PipeProcessorChain<I, O> processorChain) {
         TaskContext<I, O> context = task.getContext();
-        if (context.getProcessorState().canRun()) {
-            context.setProcessorState(TaskState.RUNNING);
+        if (context.getProcessorState().get().canRun()) {
+            context.getProcessorState().set(TaskState.RUNNING);
         } else {
             throw new TaskExecutionException("The processor can not run on this state!");
         }
@@ -71,19 +71,19 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
             // 写出缓冲区，尾结点取 wirter buffer，非尾结点取当前节点的 buffer
             DataBuffer writeBuffer = isTail ? context.getWriteBuffer() : cur.getBuffer();
             // 设置当前节点状态为运行中
-            cur.setState(TaskState.RUNNING);
+            cur.getState().set(TaskState.RUNNING);
             processorFutures.add(executor.submit(() -> {
                 while (true) {
                     // 上个节点状态，头节点取 reader state，非头节点取上个节点的 state
-                    TaskState preState = isHead ? context.getReaderState() : pre.getState();
+                    TaskState preState = isHead ? context.getReaderState().get() : (TaskState) pre.getState().get();
                     // 若上个节点的状态不是 running 并且读取缓冲区为空，跳出循环
                     if (preState != TaskState.RUNNING && readBuffer.isEmpty()) {
                         break;
                     }
                     // 若当前线程中断，则将当前节点及 processor 状态设为 terminated，任务终止
                     if (ThreadUtil.isCurThreadInterrupted()) {
-                        cur.setState(TaskState.TERMINATED);
-                        context.setProcessorState(TaskState.TERMINATED);
+                        cur.getState().set(TaskState.TERMINATED);
+                        context.getProcessorState().set(TaskState.TERMINATED);
                         return;
                     }
                     DataChunk output;
@@ -98,8 +98,8 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
                     } catch (Exception e) {
                         if (attributes.shouldInterruptFor(e)) {
                             // 若当前异常需要中断任务，则将当前节点及 processor 状态设为 failed，发布任务失败事件
-                            cur.setState(TaskState.FAILED);
-                            context.setProcessorState(TaskState.FAILED);
+                            cur.getState().set(TaskState.FAILED);
+                            context.getProcessorState().set(TaskState.FAILED);
                             dispatcher.dispatch(new TaskFailedEvent(task, TaskFailedEvent.Cause.PROCESSOR_FAILED, e));
                             return;
                         } else {
@@ -113,7 +113,7 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
                             try {
                                 // 尝试将数据写入缓冲区，若当前节点为尾结点，则更新 processor 进度
                                 if (retryer.call(() -> writeBuffer.tryProduce(o)) && isTail) {
-                                    context.incrProcessedCount(1);
+                                    context.getProcessedCounter().incr();
                                 }
                             } catch (ExecutionException | RetryException e) {
                                 dispatcher.dispatch(new TaskWarnningEvent(task, TaskWarnningEvent.Cause.PROCESSOR_TO_BUFFER_FAILED, e));
@@ -122,11 +122,11 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
                     }
                 }
                 // 将当前节点状态更新为上个节点状态
-                TaskState preState = isHead ? context.getReaderState() : pre.getState();
-                cur.setState(preState);
+                TaskState preState = isHead ? context.getReaderState().get() : (TaskState) pre.getState().get();
+                cur.getState().set(preState);
                 if (isTail) {
                     // 若当前节点为尾结点，则将 processor 状态更新为与 reader 一致
-                    context.setProcessorState(context.getReaderState());
+                    context.getProcessorState().set(context.getReaderState());
                 }
             }));
         }
@@ -135,9 +135,9 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
     @Override
     public void stop(PipeTask<I, O> task, PipeProcessorChain<I, O> processorChain) {
         TaskContext<I, O> context = task.getContext();
-        if (context.getProcessorState().canStop()) {
-            context.setProcessorState(TaskState.STOPPING);
-            processorChain.getNodes().forEach(node -> node.setState(TaskState.STOPPING));
+        if (context.getProcessorState().get().canStop()) {
+            context.getProcessorState().set(TaskState.STOPPING);
+            processorChain.getNodes().forEach(node -> node.getState().set(TaskState.STOPPING));
         } else {
             throw new TaskExecutionException("The processor can not stop on this state!");
         }
@@ -146,9 +146,9 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
     @Override
     public void shutDown(PipeTask<I, O> task, PipeProcessorChain<I, O> processorChain) {
         TaskContext<I, O> context = task.getContext();
-        if (context.getProcessorState().canShutdown()) {
-            context.setProcessorState(TaskState.TERMINATED);
-            processorChain.getNodes().forEach(node -> node.setState(TaskState.TERMINATED));
+        if (context.getProcessorState().get().canShutdown()) {
+            context.getProcessorState().set(TaskState.TERMINATED);
+            processorChain.getNodes().forEach(node -> node.getState().set(TaskState.TERMINATED));
             processorFutures.forEach(future -> future.cancel(true));
         } else {
             throw new TaskExecutionException("The processor can not shutdown on this state!");

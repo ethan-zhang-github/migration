@@ -1,14 +1,12 @@
 package com.aihuishou.pipeline.core.context;
 
 import com.aihuishou.pipeline.core.buffer.DataBuffer;
+import com.aihuishou.pipeline.core.common.*;
 import com.aihuishou.pipeline.core.task.PipeTask;
 import lombok.Builder;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.atomic.LongAdder;
 
 /**
  * 本地任务上下文
@@ -27,27 +25,27 @@ public class LocalTaskContext<I, O> implements TaskContext<I, O> {
 
     private final DataBuffer<O> writeBuffer;
 
-    private final LongAdder readerCounter = new LongAdder();
+    private final Counter readerCounter = new LocalCounter();
 
-    private final LongAdder processorCounter = new LongAdder();
+    private final Counter processorCounter = new LocalCounter();
 
-    private final LongAdder writerCounter = new LongAdder();
+    private final Counter writerCounter = new LocalCounter();
 
-    private final TaskStateHolder readerState = new TaskStateHolder();
+    private final Holder<TaskState> readerState = new LocalTaskStateHolder();
 
-    private final TaskStateHolder processorState = new TaskStateHolder();
+    private final Holder<TaskState> processorState = new LocalTaskStateHolder();
 
-    private final TaskStateHolder writerState = new TaskStateHolder();
+    private final Holder<TaskState> writerState = new LocalTaskStateHolder();
 
-    private final AtomicLong totalCounter = new AtomicLong();
+    private final Holder<Long> total = new LocalHolder<>();
 
-    private final AtomicReference<Instant> startTimestamap = new AtomicReference<>();
+    private final Holder<Instant> startTimestamap = new LocalOnceHolder<>();
 
-    private final AtomicReference<Instant> finishTimestamap = new AtomicReference<>();
+    private final Holder<Instant> finishTimestamap = new LocalOnceHolder<>();
 
-    private Duration reportPeriod;
+    private final Holder<Duration> reportPeriod = new LocalHolder<>();
 
-    private Duration timeout;
+    private final Holder<Duration> timeout = new LocalHolder<>();
 
     @Override
     public LocalTaskParameter getParameter() {
@@ -70,135 +68,83 @@ public class LocalTaskContext<I, O> implements TaskContext<I, O> {
     }
 
     @Override
-    public long getReadCount() {
-        return readerCounter.longValue();
+    public Counter getReadCounter() {
+        return readerCounter;
     }
 
     @Override
-    public void incrReadCount(long count) {
-        readerCounter.add(count);
+    public Counter getProcessedCounter() {
+        return processorCounter;
     }
 
     @Override
-    public long getProcessedCount() {
-        return processorCounter.longValue();
+    public Counter getWrittenCounter() {
+        return writerCounter;
     }
 
     @Override
-    public void incrProcessedCount(long count) {
-        processorCounter.add(count);
+    public Holder<TaskState> getReaderState() {
+        return readerState;
     }
 
     @Override
-    public long getWrittenCount() {
-        return writerCounter.longValue();
+    public Holder<TaskState> getProcessorState() {
+        return processorState;
     }
 
     @Override
-    public void incrWrittenCount(long count) {
-        writerCounter.add(count);
+    public Holder<TaskState> getWriterState() {
+        return writerState;
     }
 
     @Override
-    public TaskState getReaderState() {
-        return readerState.get();
+    public Holder<Long> getTotal() {
+        return total;
     }
 
     @Override
-    public TaskState getProcessorState() {
-        return processorState.get();
+    public Holder<Instant> getStartTimestamp() {
+        return startTimestamap;
     }
 
     @Override
-    public TaskState getWriterState() {
-        return writerState.get();
-    }
-
-    @Override
-    public void setReaderState(TaskState state) {
-        readerState.transfer(state);
-    }
-
-    @Override
-    public void setProcessorState(TaskState state) {
-        processorState.transfer(state);
-    }
-
-    @Override
-    public void setWriterState(TaskState state) {
-        writerState.transfer(state);
-    }
-
-    @Override
-    public long getTotal() {
-        return totalCounter.get();
-    }
-
-    @Override
-    public void setTotal(long total) {
-        totalCounter.set(total);
-    }
-
-    @Override
-    public Instant getStartTimestamp() {
-        return startTimestamap.get();
-    }
-
-    @Override
-    public void setStartTimestamp(Instant instant) {
-        startTimestamap.compareAndSet(null, instant);
-    }
-
-    @Override
-    public Instant getFinishTimestamp() {
-        return finishTimestamap.get();
-    }
-
-    @Override
-    public void setFinishTimestamp(Instant instant) {
-        finishTimestamap.compareAndSet(null, instant);
+    public Holder<Instant> getFinishTimestamp() {
+        return finishTimestamap;
     }
 
     @Override
     public Duration getCost() {
-        if (startTimestamap.get() == null) {
+        if (!startTimestamap.isPresent()) {
             return Duration.ZERO;
         }
-        if (finishTimestamap.get() == null) {
+        if (!finishTimestamap.isPresent()) {
             return Duration.between(startTimestamap.get(), Instant.now());
         }
         return Duration.between(startTimestamap.get(), finishTimestamap.get());
     }
 
     @Override
-    public void setReportPeriod(Duration reportPeriod) {
-        this.reportPeriod = reportPeriod;
-    }
-
-    @Override
-    public Duration getReportPeriod() {
+    public Holder<Duration> getReportPeriod() {
         return reportPeriod;
     }
 
     @Override
-    public void setTimeout(Duration timeout) {
-        this.timeout = timeout;
-    }
-
-    @Override
-    public Duration getTimeout() {
+    public Holder<Duration> getTimeout() {
         return timeout;
     }
 
     @Override
     public boolean isTimeout() {
-        if (startTimestamap.get() == null) {
+        if (!timeout.isPresent()) {
             return false;
         }
-        if (finishTimestamap.get() != null) {
+        if (!startTimestamap.isPresent()) {
             return false;
         }
-        return Duration.between(startTimestamap.get(), Instant.now()).compareTo(timeout) > 0;
+        if (!finishTimestamap.isPresent()) {
+            return false;
+        }
+        return Duration.between(startTimestamap.get(), Instant.now()).compareTo(timeout.get()) > 0;
     }
 
 }

@@ -28,8 +28,8 @@ public abstract class AbstractTaskExecutor<I, O> implements TaskExecutor<I, O> {
     @Override
     public synchronized void start(PipeTask<I, O> task) {
         TaskContext<I, O> context = task.getContext();
-        if (context.getReaderState().canRun() && context.getProcessorState().canRun() && context.getWriterState().canRun()) {
-            context.setStartTimestamp(Instant.now());
+        if (context.getReaderState().get().canRun() && context.getProcessorState().get().canRun() && context.getWriterState().get().canRun()) {
+            context.getStartTimestamp().set(Instant.now());
             readerExecutor.start(task, task.getReader());
             processorExecutor.start(task, task.getProcessorChain());
             writerExecutor.start(task, task.getWriter());
@@ -42,7 +42,7 @@ public abstract class AbstractTaskExecutor<I, O> implements TaskExecutor<I, O> {
     @Override
     public synchronized void stop(PipeTask<I, O> task) {
         TaskContext<I, O> context = task.getContext();
-        if (context.getReaderState().canStop() && context.getProcessorState().canStop() && context.getWriterState().canStop()) {
+        if (context.getReaderState().get().canStop() && context.getProcessorState().get().canStop() && context.getWriterState().get().canStop()) {
             readerExecutor.stop(task, task.getReader());
             processorExecutor.stop(task, task.getProcessorChain());
             writerExecutor.stop(task, task.getWriter());
@@ -55,7 +55,7 @@ public abstract class AbstractTaskExecutor<I, O> implements TaskExecutor<I, O> {
     @Override
     public synchronized void shutDown(PipeTask<I, O> task) {
         TaskContext<I, O> context = task.getContext();
-        if (context.getReaderState().canShutdown() && context.getProcessorState().canShutdown() && context.getWriterState().canShutdown()) {
+        if (context.getReaderState().get().canShutdown() && context.getProcessorState().get().canShutdown() && context.getWriterState().get().canShutdown()) {
             readerExecutor.shutDown(task, task.getReader());
             processorExecutor.shutDown(task, task.getProcessorChain());
             writerExecutor.shutDown(task, task.getWriter());

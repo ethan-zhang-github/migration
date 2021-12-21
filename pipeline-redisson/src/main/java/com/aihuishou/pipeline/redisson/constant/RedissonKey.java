@@ -8,4 +8,6 @@ public interface RedissonKey {
 
     String REDISSON_TASK_REGISTRY = PIPELINE_REDISSON + "task-registry:";
 
+    String REDISSON_TASK_PARAMETER = PIPELINE_REDISSON + "task-parameter:";
+
 }

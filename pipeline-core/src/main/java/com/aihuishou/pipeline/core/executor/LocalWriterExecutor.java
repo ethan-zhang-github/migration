@@ -1,11 +1,6 @@
 package com.aihuishou.pipeline.core.executor;
 
 import com.aihuishou.pipeline.core.annotation.TaskConfigAttributes;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import lombok.Getter;
-import org.apache.commons.collections4.CollectionUtils;
 import com.aihuishou.pipeline.core.buffer.DataBuffer;
 import com.aihuishou.pipeline.core.context.DataChunk;
 import com.aihuishou.pipeline.core.context.TaskContext;
@@ -16,6 +11,11 @@ import com.aihuishou.pipeline.core.event.TaskWarnningEvent;
 import com.aihuishou.pipeline.core.exception.TaskExecutionException;
 import com.aihuishou.pipeline.core.task.PipeTask;
 import com.aihuishou.pipeline.core.writer.PipeWriter;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import lombok.Getter;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -42,8 +42,8 @@ public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
     @Override
     public void start(PipeTask<I, O> task, PipeWriter<O> writer) {
         TaskContext<I, O> context = task.getContext();
-        if (context.getWriterState().canRun()) {
-            context.setWriterState(TaskState.RUNNING);
+        if (context.getWriterState().get().canRun()) {
+            context.getWriterState().set(TaskState.RUNNING);
         } else {
             throw new TaskExecutionException("The writer can not run on this state!");
         }
@@ -51,9 +51,9 @@ public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
         TaskConfigAttributes attributes = TaskConfigAttributes.fromClass(writer.getClass());
         writerFuture = executor.submit(() -> {
             writer.initialize(context);
-            while (context.getProcessorState() == TaskState.RUNNING || !writeBuffer.isEmpty()) {
+            while (context.getProcessorState().get() == TaskState.RUNNING || !writeBuffer.isEmpty()) {
                 if (Thread.currentThread().isInterrupted()) {
-                    context.setWriterState(TaskState.TERMINATED);
+                    context.getWriterState().set(TaskState.TERMINATED);
                     return;
                 }
                 try {
@@ -61,11 +61,11 @@ public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
                     if (CollectionUtils.isEmpty(output)) {
                         Thread.yield();
                     } else {
-                        context.incrWrittenCount(writer.write(context, DataChunk.of(output)));
+                        context.getWrittenCounter().incr(writer.write(context, DataChunk.of(output)));
                     }
                 } catch (Exception e) {
                     if (attributes.shouldInterruptFor(e)) {
-                        context.setWriterState(TaskState.FAILED);
+                        context.getWriterState().set(TaskState.FAILED);
                         writer.destroy(context);
                         task.getDispatcher().dispatch(new TaskFailedEvent(task, TaskFailedEvent.Cause.WRITER_FAILED, e));
                         return;
@@ -74,8 +74,8 @@ public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
                     }
                 }
             }
-            context.setWriterState(context.getProcessorState());
-            if (context.getWriterState() == TaskState.TERMINATED || context.getWriterState() == TaskState.FAILED) {
+            context.getWriterState().set(context.getProcessorState());
+            if (context.getWriterState().get() == TaskState.TERMINATED || context.getWriterState().get() == TaskState.FAILED) {
                 writer.destroy(context);
             }
             if (context.isTerminated()) {
@@ -87,8 +87,8 @@ public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
     @Override
     public void stop(PipeTask<I, O> task, PipeWriter<O> writer) {
         TaskContext<I, O> context = task.getContext();
-        if (context.getWriterState().canStop()) {
-            context.setWriterState(TaskState.STOPPING);
+        if (context.getWriterState().get().canStop()) {
+            context.getWriterState().set(TaskState.STOPPING);
         } else {
             throw new TaskExecutionException("The writer can not stop on this state!");
         }
@@ -97,8 +97,8 @@ public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
     @Override
     public void shutDown(PipeTask<I, O> task, PipeWriter<O> writer) {
         TaskContext<I, O> context = task.getContext();
-        if (context.getWriterState().canShutdown()) {
-            context.setWriterState(TaskState.TERMINATED);
+        if (context.getWriterState().get().canShutdown()) {
+            context.getWriterState().set(TaskState.TERMINATED);
             Optional.ofNullable(writerFuture).ifPresent(t -> t.cancel(true));
         } else {
             throw new TaskExecutionException("The writer can not shutdown on this state!");

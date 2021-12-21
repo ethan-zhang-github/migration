@@ -57,7 +57,7 @@ class LocalReporterScheduler extends AbstractTaskScheduler {
                     }
                 } else {
                     Instant lastReportTime = timer.get(taskId);
-                    if (lastReportTime.plus(context.getReportPeriod()).isBefore(Instant.now())) {
+                    if (lastReportTime.plus(context.getReportPeriod().get()).isBefore(Instant.now())) {
                         try {
                             task.getReporter().report(task);
                         } finally {

@@ -1,11 +1,5 @@
 package com.aihuishou.pipeline.core.executor;
 
-import com.github.rholder.retry.RetryException;
-import com.github.rholder.retry.Retryer;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
-import lombok.Getter;
 import com.aihuishou.pipeline.core.annotation.TaskConfigAttributes;
 import com.aihuishou.pipeline.core.buffer.DataBuffer;
 import com.aihuishou.pipeline.core.context.DataChunk;
@@ -16,6 +10,12 @@ import com.aihuishou.pipeline.core.event.TaskWarnningEvent;
 import com.aihuishou.pipeline.core.exception.TaskExecutionException;
 import com.aihuishou.pipeline.core.reader.PipeReader;
 import com.aihuishou.pipeline.core.task.PipeTask;
+import com.github.rholder.retry.RetryException;
+import com.github.rholder.retry.Retryer;
+import com.google.common.util.concurrent.ListenableFuture;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+import lombok.Getter;
 
 import java.util.Optional;
 import java.util.Set;
@@ -42,8 +42,8 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
     @Override
     public void start(PipeTask<I, O> task, PipeReader<I> reader) {
         TaskContext<I, O> context = task.getContext();
-        if (context.getReaderState().canRun()) {
-            context.setReaderState(TaskState.RUNNING);
+        if (context.getReaderState().get().canRun()) {
+            context.getReaderState().set(TaskState.RUNNING);
         } else {
             throw new TaskExecutionException("The reader can not run on this state!");
         }
@@ -52,9 +52,9 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
         DataBuffer<I> readBuffer = context.getReadBuffer();
         readerFuture =  executor.submit(() -> {
             reader.initialize(context);
-            while (context.getReaderState() == TaskState.RUNNING) {
+            while (context.getReaderState().get() == TaskState.RUNNING) {
                 if (Thread.currentThread().isInterrupted()) {
-                    context.setReaderState(TaskState.TERMINATED);
+                    context.getReaderState().set(TaskState.TERMINATED);
                     return;
                 }
                 DataChunk<I> chunk;
@@ -63,7 +63,7 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
                 } catch (Exception e) {
                     Set<Class<? extends Throwable>> interruptFor = attributes.getInterruptFor();
                     if (interruptFor.stream().anyMatch(t -> t.isAssignableFrom(e.getClass()))) {
-                        context.setReaderState(TaskState.FAILED);
+                        context.getReaderState().set(TaskState.FAILED);
                         reader.destroy(context);
                         task.getDispatcher().dispatch(new TaskFailedEvent(task, TaskFailedEvent.Cause.READER_FAILED, e));
                         return;
@@ -73,14 +73,14 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
                     }
                 }
                 if (chunk.isEmpty()) {
-                    context.setReaderState(TaskState.TERMINATED);
+                    context.getReaderState().set(TaskState.TERMINATED);
                     reader.destroy(context);
                     return;
                 } else {
                     for (I i : chunk) {
                         try {
                             if (retryer.call(() -> readBuffer.tryProduce(i))) {
-                                context.incrReadCount(1);
+                                context.getReadCounter().incr();
                             }
                         } catch (ExecutionException | RetryException e) {
                             task.getDispatcher().dispatch(new TaskWarnningEvent(task, TaskWarnningEvent.Cause.READER_TO_BUFFER_FAILED, e));
@@ -94,8 +94,8 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
     @Override
     public void stop(PipeTask<I, O> task, PipeReader<I> reader) {
         TaskContext<I, O> context = task.getContext();
-        if (context.getReaderState().canStop()) {
-            context.setReaderState(TaskState.STOPPING);
+        if (context.getReaderState().get().canStop()) {
+            context.getReaderState().set(TaskState.STOPPING);
         } else {
             throw new TaskExecutionException("The reader can not stop on this state!");
         }
@@ -104,8 +104,8 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
     @Override
     public void shutDown(PipeTask<I, O> task, PipeReader<I> reader) {
         TaskContext<I, O> context = task.getContext();
-        if (context.getReaderState().canShutdown()) {
-            context.setReaderState(TaskState.TERMINATED);
+        if (context.getReaderState().get().canShutdown()) {
+            context.getReaderState().set(TaskState.TERMINATED);
             Optional.ofNullable(readerFuture).ifPresent(t -> t.cancel(true));
         } else {
             throw new TaskExecutionException("The reader can not shutdown on this state!");

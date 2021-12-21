@@ -2,8 +2,9 @@ package com.aihuishou.pipeline.core.processor;
 
 import com.aihuishou.pipeline.core.buffer.DataBuffer;
 import com.aihuishou.pipeline.core.config.GlobalConfig;
+import com.aihuishou.pipeline.core.common.Holder;
+import com.aihuishou.pipeline.core.context.LocalTaskStateHolder;
 import com.aihuishou.pipeline.core.context.TaskState;
-import com.aihuishou.pipeline.core.context.TaskStateHolder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,7 +26,7 @@ public class PipeProcessorNode<I, O> {
     /**
      * 当前节点状态
      */
-    private TaskStateHolder state;
+    private Holder<TaskState> state;
 
     /**
      * 写出缓冲区
@@ -35,22 +36,18 @@ public class PipeProcessorNode<I, O> {
     @SuppressWarnings("unchecked")
     public PipeProcessorNode(PipeProcessor<I, O> processor, int bufferSize) {
         this.processor = processor;
-        this.state = new TaskStateHolder();
+        this.state = new LocalTaskStateHolder();
         this.buffer = GlobalConfig.BUFFER.getDefaultDataBuffer().apply(bufferSize);
     }
 
     public PipeProcessorNode(PipeProcessor<I, O> processor) {
         this.processor = processor;
-        this.state = new TaskStateHolder();
+        this.state = new LocalTaskStateHolder();
         this.buffer = DataBuffer.empty();
     }
 
-    public TaskState getState() {
-        return state.get();
-    }
-
-    public void setState(TaskState target) {
-        state.transfer(target);
+    public Holder<TaskState> getState() {
+        return state;
     }
 
 }

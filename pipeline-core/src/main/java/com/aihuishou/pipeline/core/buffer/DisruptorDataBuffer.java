@@ -1,6 +1,6 @@
 package com.aihuishou.pipeline.core.buffer;
 
-import com.aihuishou.pipeline.core.model.Wrapper;
+import com.aihuishou.pipeline.core.common.LocalHolder;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.util.DaemonThreadFactory;
 
@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  */
 public class DisruptorDataBuffer<T> implements DataBuffer<T> {
 
-    private final Disruptor<Wrapper<T>> disruptor;
+    private final Disruptor<LocalHolder<T>> disruptor;
 
     private final ConcurrentLinkedQueue<T> buffer;
 
@@ -23,7 +23,7 @@ public class DisruptorDataBuffer<T> implements DataBuffer<T> {
 
     public DisruptorDataBuffer(int capacity) {
         actualCapacity = capacityFor(capacity);
-        disruptor = new Disruptor<>(Wrapper::new, actualCapacity, DaemonThreadFactory.INSTANCE);
+        disruptor = new Disruptor<>(LocalHolder::new, actualCapacity, DaemonThreadFactory.INSTANCE);
         disruptor.handleEventsWith(this::onEvent);
         buffer = new ConcurrentLinkedQueue<>();
         disruptor.start();
@@ -86,14 +86,14 @@ public class DisruptorDataBuffer<T> implements DataBuffer<T> {
         }
     }
 
-    private void translate(Wrapper<T> event, long sequence, T data) {
-        event.setData(data);
+    private void translate(LocalHolder<T> event, long sequence, T data) {
+        event.set(data);
     }
 
-    private void onEvent(Wrapper<T> event, long sequence, boolean endOfBatch) {
+    private void onEvent(LocalHolder<T> event, long sequence, boolean endOfBatch) {
         while (true) {
             if (buffer.size() < actualCapacity) {
-                buffer.offer(event.getData());
+                buffer.offer(event.get());
                 return;
             } else {
                 Thread.yield();

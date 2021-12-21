@@ -1,6 +1,7 @@
 package com.aihuishou.pipeline.core.task;
 
-import com.aihuishou.pipeline.core.context.LocalTaskParameter;
+import com.aihuishou.pipeline.core.common.Holder;
+import com.aihuishou.pipeline.core.context.TaskParameter;
 import com.aihuishou.pipeline.core.utils.DateTimeFormatters;
 
 import java.time.Instant;
@@ -23,9 +24,9 @@ public class PipeTaskAttributes {
         attributes.set(AttributeType.READER_BUFFER_CAPACITY, task.getContext().getReadBuffer().capacity());
         attributes.set(AttributeType.WRITER_BUFFER_SIZE, task.getContext().getWriteBuffer().size());
         attributes.set(AttributeType.WRITER_BUFFER_CAPACITY, task.getContext().getWriteBuffer().capacity());
-        attributes.set(AttributeType.READ_COUNT, task.getContext().getReadCount());
-        attributes.set(AttributeType.PROCESSED_COUNT, task.getContext().getProcessedCount());
-        attributes.set(AttributeType.WRITTEN_COUNT, task.getContext().getWrittenCount());
+        attributes.set(AttributeType.READ_COUNT, task.getContext().getReadCounter());
+        attributes.set(AttributeType.PROCESSED_COUNT, task.getContext().getProcessedCounter());
+        attributes.set(AttributeType.WRITTEN_COUNT, task.getContext().getWrittenCounter());
         attributes.set(AttributeType.READER_STATE, task.getContext().getReaderState());
         attributes.set(AttributeType.PROCESSOR_STATE, task.getContext().getProcessorState());
         attributes.set(AttributeType.WRITER_STATE, task.getContext().getWriterState());
@@ -54,13 +55,13 @@ public class PipeTaskAttributes {
         List<Class<?>> processorTypes = get(AttributeType.PROCESSOR_TYPE);
         builder.append(String.format("PROCESSOR_TYPE: [%s]%s", processorTypes.stream().map(Class::toString).collect(Collectors.joining(" -> ")), separator));
         builder.append(String.format("WRITER_TYPE: [%s]%s", get(AttributeType.WRITER_TYPE), separator));
-        LocalTaskParameter parameter = get(AttributeType.PARAMETER);
+        TaskParameter parameter = get(AttributeType.PARAMETER);
         if (parameter != null) {
             builder.append(String.format("PARAMETER: [%s]%s", parameter, separator));
         }
-        long total = get(AttributeType.TOTAL);
-        if (total > 0) {
-            builder.append(String.format("PARAMETER: [%s]%s", total, separator));
+        Holder<Long> total = get(AttributeType.TOTAL);
+        if (total.isPresent() && total.get() > 0) {
+            builder.append(String.format("TOTAL: [%s]%s", total, separator));
         }
         int readerBufferCapacity = get(AttributeType.READER_BUFFER_CAPACITY);
         if (readerBufferCapacity > 0) {
@@ -77,13 +78,13 @@ public class PipeTaskAttributes {
         builder.append(String.format("READER_STATE: [%s(%s)]%s", get(AttributeType.READER_STATE), get(AttributeType.READ_COUNT), separator));
         builder.append(String.format("PROCESSOR_STATE: [%s(%s)]%s", get(AttributeType.PROCESSOR_STATE), get(AttributeType.PROCESSED_COUNT), separator));
         builder.append(String.format("WRITER_STATE: [%s(%s)]%s", get(AttributeType.WRITER_STATE), get(AttributeType.WRITTEN_COUNT), separator));
-        Instant startTime = get(AttributeType.START_TIME);
-        if (startTime != null) {
-            builder.append(String.format("START_TIME: [%s]%s", DateTimeFormatters.PATTERN_0.formatInstant(startTime), separator));
+        Holder<Instant> startTime = get(AttributeType.START_TIME);
+        if (startTime.isPresent()) {
+            builder.append(String.format("START_TIME: [%s]%s", DateTimeFormatters.PATTERN_0.formatInstant(startTime.get()), separator));
         }
-        Instant finishTime = get(AttributeType.FINISH_TIME);
-        if (finishTime != null) {
-            builder.append(String.format("FINISH_TIME: [%s]%s", DateTimeFormatters.PATTERN_0.formatInstant(finishTime), separator));
+        Holder<Instant> finishTime = get(AttributeType.FINISH_TIME);
+        if (finishTime.isPresent()) {
+            builder.append(String.format("FINISH_TIME: [%s]%s", DateTimeFormatters.PATTERN_0.formatInstant(finishTime.get()), separator));
         }
         builder.append(String.format("COST: [%s]%s", get(AttributeType.COST), separator));
         builder.append(String.format("TIMEOUT: [%s]%s", get(AttributeType.TIMEOUT), separator));
@@ -112,7 +113,7 @@ public class PipeTaskAttributes {
         START_TIME,
         FINISH_TIME,
         COST,
-        TIMEOUT;
+        TIMEOUT
 
     }
 
