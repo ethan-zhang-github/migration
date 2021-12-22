@@ -126,6 +126,21 @@ public enum TaskState {
         }
     };
 
+    public static boolean canTransfer(TaskState origin, TaskState target) {
+        switch (target) {
+            case RUNNING:
+                return origin.canRun();
+            case STOPPING:
+                return origin.canStop();
+            case TERMINATED:
+                return origin == TaskState.RUNNING || origin == TaskState.STOPPING;
+            case FAILED:
+                return origin == TaskState.RUNNING;
+            default:
+                return false;
+        }
+    }
+
     public abstract boolean isFinalState();
 
     public abstract boolean canRun();

@@ -13,32 +13,31 @@ import com.aihuishou.pipeline.core.processor.PipeProcessor;
 import com.aihuishou.pipeline.core.processor.PipeProcessorChain;
 import com.aihuishou.pipeline.core.processor.PipeProcessorNode;
 import com.aihuishou.pipeline.core.task.PipeTask;
+import com.aihuishou.pipeline.core.utils.BatchUtil;
+import com.aihuishou.pipeline.core.utils.Functions;
 import com.aihuishou.pipeline.core.utils.ThreadUtil;
 import com.github.rholder.retry.RetryException;
 import com.github.rholder.retry.Retryer;
-import com.google.common.util.concurrent.Futures;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 
 @Getter
 public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
 
-    private final ListeningExecutorService executor;
+    private final Executor executor;
 
-    private List<ListenableFuture<?>> processorFutures = Collections.emptyList();
+    private CompletableFuture<Void> future;
 
-    public LocalProcessorExecutor(ExecutorService executor) {
-        this.executor = MoreExecutors.listeningDecorator(executor);
+    public LocalProcessorExecutor(Executor executor) {
+        this.executor = executor;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -51,7 +50,7 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
             throw new TaskExecutionException("The processor can not run on this state!");
         }
         TaskEventDispatcher dispatcher = task.getDispatcher();
-        processorFutures = new ArrayList<>(processorChain.length());
+        List<CompletableFuture<Void>> futures = new ArrayList<>(processorChain.length());
         LinkedList<PipeProcessorNode<?, ?>> nodes = processorChain.getNodes();
         // 遍历执行 processor
         for (int i = 0; i < nodes.size(); i++) {
@@ -72,7 +71,7 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
             DataBuffer writeBuffer = isTail ? context.getWriteBuffer() : cur.getBuffer();
             // 设置当前节点状态为运行中
             cur.getState().set(TaskState.RUNNING);
-            processorFutures.add(executor.submit(() -> {
+            futures.add(CompletableFuture.runAsync(() -> {
                 while (true) {
                     // 上个节点状态，头节点取 reader state，非头节点取上个节点的 state
                     TaskState preState = isHead ? context.getReaderState().get() : (TaskState) pre.getState().get();
@@ -128,8 +127,9 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
                     // 若当前节点为尾结点，则将 processor 状态更新为与 reader 一致
                     context.getProcessorState().set(context.getReaderState());
                 }
-            }));
+            }, executor));
         }
+        future = BatchUtil.merge(futures, Functions.firstOneBinaryOperator());
     }
 
     @Override
@@ -149,7 +149,7 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
         if (context.getProcessorState().get().canShutdown()) {
             context.getProcessorState().set(TaskState.TERMINATED);
             processorChain.getNodes().forEach(node -> node.getState().set(TaskState.TERMINATED));
-            processorFutures.forEach(future -> future.cancel(true));
+            Optional.ofNullable(future).ifPresent(f -> f.cancel(true));
         } else {
             throw new TaskExecutionException("The processor can not shutdown on this state!");
         }
@@ -158,11 +158,7 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
     @SuppressWarnings("all")
     @Override
     public void join(PipeTask<I, O> task, PipeProcessorChain<I, O> processorChain) {
-        try {
-            Futures.allAsList(processorFutures).get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new TaskExecutionException("The processor join failed!", e);
-        }
+        future.join();
     }
 
 }

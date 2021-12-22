@@ -6,6 +6,7 @@ import com.aihuishou.pipeline.core.utils.BatchUtil;
 
 import java.util.List;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ForkJoinPool;
 
 /**
  * 数据分片并发处理
@@ -18,6 +19,11 @@ public abstract class PartitionedConcurrentProcessor<I, O> implements PipeProces
     private final int size;
 
     private final Executor executor;
+
+    public PartitionedConcurrentProcessor(int size) {
+        this.size = size;
+        this.executor = ForkJoinPool.commonPool();
+    }
 
     public PartitionedConcurrentProcessor(int size, Executor executor) {
         this.size = size;

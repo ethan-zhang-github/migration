@@ -15,6 +15,18 @@ public class LocalTaskStateHolder extends CasHolder<TaskState> {
     }
 
     @Override
+    protected void validate(TaskState origin, TaskState target) {
+        if (!TaskState.canTransfer(origin, target)) {
+            throw new StateTransferException(origin, target);
+        }
+    }
+
+    @Override
+    protected boolean compareAndSet(TaskState origin, TaskState target) {
+        return state.compareAndSet(origin, target);
+    }
+
+    @Override
     public TaskState get() {
         return state.get();
     }
@@ -27,41 +39,6 @@ public class LocalTaskStateHolder extends CasHolder<TaskState> {
     @Override
     public boolean isPresent() {
         return state.get() != null;
-    }
-
-    @Override
-    protected void validate(TaskState origin, TaskState target) {
-        switch (target) {
-            case NEW:
-                throw new StateTransferException(origin, target);
-            case RUNNING:
-                if (!origin.canRun()) {
-                    throw new StateTransferException(origin, target);
-                }
-                break;
-            case STOPPING:
-                if (!origin.canStop()) {
-                    throw new StateTransferException(origin, target);
-                }
-                break;
-            case TERMINATED:
-                if (origin != TaskState.RUNNING && origin != TaskState.STOPPING) {
-                    throw new StateTransferException(origin, target);
-                }
-                break;
-            case FAILED:
-                if (origin != TaskState.RUNNING) {
-                    throw new StateTransferException(origin, target);
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    @Override
-    protected boolean compareAndSet(TaskState origin, TaskState target) {
-        return state.compareAndSet(origin, target);
     }
 
     @Override

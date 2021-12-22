@@ -36,9 +36,12 @@ public class TextLinesWriter<O> extends OnceInitializedWriter<O> {
         }
     }
 
+    @SuppressWarnings("all")
     @Override
     protected void initializeInternal(TaskContext<?, O> context) {
-        file.deleteOnExit();
+        if (file.exists()) {
+            file.delete();
+        }
     }
 
 }

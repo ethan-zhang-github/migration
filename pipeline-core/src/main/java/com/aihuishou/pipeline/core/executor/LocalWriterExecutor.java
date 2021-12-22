@@ -11,16 +11,13 @@ import com.aihuishou.pipeline.core.event.TaskWarnningEvent;
 import com.aihuishou.pipeline.core.exception.TaskExecutionException;
 import com.aihuishou.pipeline.core.task.PipeTask;
 import com.aihuishou.pipeline.core.writer.PipeWriter;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 /**
  * 本地写入执行器
@@ -31,12 +28,12 @@ import java.util.concurrent.ExecutorService;
 @Getter
 public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
 
-    private final ListeningExecutorService executor;
+    private final Executor executor;
 
-    private ListenableFuture<?> writerFuture;
+    private CompletableFuture<Void> future;
 
-    public LocalWriterExecutor(ExecutorService executor) {
-        this.executor = MoreExecutors.listeningDecorator(executor);
+    public LocalWriterExecutor(Executor executor) {
+        this.executor = executor;
     }
 
     @Override
@@ -49,7 +46,7 @@ public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
         }
         DataBuffer<O> writeBuffer = context.getWriteBuffer();
         TaskConfigAttributes attributes = TaskConfigAttributes.fromClass(writer.getClass());
-        writerFuture = executor.submit(() -> {
+        future = CompletableFuture.runAsync(() -> {
             writer.initialize(context);
             while (context.getProcessorState().get() == TaskState.RUNNING || !writeBuffer.isEmpty()) {
                 if (Thread.currentThread().isInterrupted()) {
@@ -81,7 +78,7 @@ public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
             if (context.isTerminated()) {
                 task.getDispatcher().dispatch(new TaskFinishedEvent(task));
             }
-        });
+        }, executor);
     }
 
     @Override
@@ -99,7 +96,7 @@ public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
         TaskContext<I, O> context = task.getContext();
         if (context.getWriterState().get().canShutdown()) {
             context.getWriterState().set(TaskState.TERMINATED);
-            Optional.ofNullable(writerFuture).ifPresent(t -> t.cancel(true));
+            Optional.ofNullable(future).ifPresent(f -> f.cancel(true));
         } else {
             throw new TaskExecutionException("The writer can not shutdown on this state!");
         }
@@ -107,11 +104,7 @@ public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
 
     @Override
     public void join(PipeTask<I, O> task, PipeWriter<O> writer) {
-        try {
-            writerFuture.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new TaskExecutionException("The writer join failed!", e);
-        }
+        future.join();
     }
 
 }
