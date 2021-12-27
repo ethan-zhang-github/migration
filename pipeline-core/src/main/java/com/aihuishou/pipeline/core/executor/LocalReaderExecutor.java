@@ -78,7 +78,7 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
                     for (I i : chunk) {
                         try {
                             if (retryer.call(() -> readBuffer.tryProduce(i))) {
-                                context.getReadCounter().incr();
+                                context.getReaderCounter().incr();
                             }
                         } catch (ExecutionException | RetryException e) {
                             task.getDispatcher().dispatch(new TaskWarnningEvent(task, TaskWarnningEvent.Cause.READER_TO_BUFFER_FAILED, e));

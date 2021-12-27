@@ -2,6 +2,7 @@ package com.aihuishou.pipeline.core.context;
 
 import com.alibaba.fastjson.JSONObject;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -35,6 +36,11 @@ public class LocalTaskParameter implements TaskParameter {
     @Override
     public <T> T getObject(String key, Class<T> clazz) {
         return parameters.getObject(key, clazz);
+    }
+
+    @Override
+    public Map<String, Object> asMap() {
+        return new HashMap<>(parameters);
     }
 
     @Override

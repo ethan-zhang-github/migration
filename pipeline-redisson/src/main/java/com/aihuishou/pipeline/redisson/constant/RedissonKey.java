@@ -18,4 +18,6 @@ public interface RedissonKey {
 
     String REDISSON_HOLDER = PIPELINE_REDISSON + "holder:";
 
+    String REDISSON_TASK_ID_GENERATOR = PIPELINE_REDISSON + "task-id-generator:";
+
 }

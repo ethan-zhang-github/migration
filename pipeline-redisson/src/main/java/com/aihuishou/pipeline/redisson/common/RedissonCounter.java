@@ -5,14 +5,17 @@ import com.aihuishou.pipeline.redisson.constant.RedissonKey;
 import org.redisson.api.RLongAdder;
 import org.redisson.api.RedissonClient;
 
+import java.time.Duration;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class RedissonCounter implements Counter {
 
     private final RLongAdder longAdder;
 
-    public RedissonCounter(RedissonClient redissonClient) {
-        this.longAdder = redissonClient.getLongAdder(RedissonKey.REDISSON_COUNTER + UUID.randomUUID());
+    public RedissonCounter(RedissonClient redissonClient, Duration ttl, String id) {
+        this.longAdder = redissonClient.getLongAdder(RedissonKey.REDISSON_COUNTER + id);
+        longAdder.expire(ttl.getSeconds(), TimeUnit.SECONDS);
     }
 
     @Override

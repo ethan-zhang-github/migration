@@ -20,8 +20,8 @@ public class RedissonDataBuffer<T> implements DataBuffer<T> {
 
     private final RBoundedBlockingQueue<T> queue;
 
-    public RedissonDataBuffer(RedissonClient redissonClient, int capacity) {
-        this.queue = redissonClient.getBoundedBlockingQueue(RedissonKey.REDISSON_DATA_BUFFER + UUID.randomUUID());
+    public RedissonDataBuffer(RedissonClient redissonClient, int capacity, String id) {
+        this.queue = redissonClient.getBoundedBlockingQueue(RedissonKey.REDISSON_DATA_BUFFER + id);
         queue.trySetCapacity(capacity);
     }
 

@@ -58,7 +58,7 @@ public class LocalWriterExecutor<I, O> implements WriterExecutor<I, O> {
                     if (CollectionUtils.isEmpty(output)) {
                         Thread.yield();
                     } else {
-                        context.getWrittenCounter().incr(writer.write(context, DataChunk.of(output)));
+                        context.getWriterCounter().incr(writer.write(context, DataChunk.of(output)));
                     }
                 } catch (Exception e) {
                     if (attributes.shouldInterruptFor(e)) {

@@ -11,13 +11,13 @@ import java.util.stream.Collectors;
 @Getter
 public class PipeProcessorChain<I, O> {
 
-    private final LinkedList<PipeProcessorNode<?, ?>> nodes;
+    private final LinkedList<PipeProcessorNode> nodes;
 
     public PipeProcessorChain(PipeProcessorNode<I, O> node) {
         this.nodes = new LinkedList<>(Collections.singleton(node));
     }
 
-    public PipeProcessorChain(Collection<PipeProcessorNode<?, ?>> nodes) {
+    public PipeProcessorChain(Collection<PipeProcessorNode> nodes) {
         this.nodes = new LinkedList<>(nodes);
     }
 

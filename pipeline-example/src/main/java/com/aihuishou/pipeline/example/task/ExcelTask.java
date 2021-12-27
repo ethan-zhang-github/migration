@@ -31,6 +31,7 @@ public class ExcelTask {
         File target = new File("src/main/resources/demo2.txt");
 
         PipeTask<ReaderItem, JSONObject> task = LocalPipeTaskBuilder.<ReaderItem, JSONObject>newBuilder()
+                .addParameter("time", System.currentTimeMillis())
                 .reader(new EasyExcelReader<>(excel, ReaderItem.class))
                 .processor(new Processor())
                 .writer(new TextLinesWriter<>(target))

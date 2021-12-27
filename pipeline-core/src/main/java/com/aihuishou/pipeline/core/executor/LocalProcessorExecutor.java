@@ -51,7 +51,7 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
         }
         TaskEventDispatcher dispatcher = task.getDispatcher();
         List<CompletableFuture<Void>> futures = new ArrayList<>(processorChain.length());
-        LinkedList<PipeProcessorNode<?, ?>> nodes = processorChain.getNodes();
+        LinkedList<PipeProcessorNode> nodes = processorChain.getNodes();
         // 遍历执行 processor
         for (int i = 0; i < nodes.size(); i++) {
             // 当前节点是否为头节点
@@ -112,7 +112,7 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
                             try {
                                 // 尝试将数据写入缓冲区，若当前节点为尾结点，则更新 processor 进度
                                 if (retryer.call(() -> writeBuffer.tryProduce(o)) && isTail) {
-                                    context.getProcessedCounter().incr();
+                                    context.getProcessorCounter().incr();
                                 }
                             } catch (ExecutionException | RetryException e) {
                                 dispatcher.dispatch(new TaskWarnningEvent(task, TaskWarnningEvent.Cause.PROCESSOR_TO_BUFFER_FAILED, e));
@@ -132,6 +132,7 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
         future = BatchUtil.merge(futures, Functions.firstOneBinaryOperator());
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void stop(PipeTask<I, O> task, PipeProcessorChain<I, O> processorChain) {
         TaskContext<I, O> context = task.getContext();
@@ -143,6 +144,7 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
         }
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void shutDown(PipeTask<I, O> task, PipeProcessorChain<I, O> processorChain) {
         TaskContext<I, O> context = task.getContext();

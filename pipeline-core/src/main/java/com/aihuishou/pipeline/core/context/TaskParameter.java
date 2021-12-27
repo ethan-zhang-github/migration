@@ -16,4 +16,6 @@ public interface TaskParameter {
 
     <T> T getObject(String key, Class<T> clazz);
 
+    Map<String, Object> asMap();
+
 }

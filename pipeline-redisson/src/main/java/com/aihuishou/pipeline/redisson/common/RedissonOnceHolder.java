@@ -6,7 +6,6 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 
 import java.time.Duration;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public class RedissonOnceHolder<T> implements Holder<T> {
@@ -15,8 +14,8 @@ public class RedissonOnceHolder<T> implements Holder<T> {
 
     private final Duration ttl;
 
-    public RedissonOnceHolder(RedissonClient redissonClient, Duration ttl) {
-        this.bucket = redissonClient.getBucket(RedissonKey.REDISSON_HOLDER + UUID.randomUUID());
+    public RedissonOnceHolder(RedissonClient redissonClient, Duration ttl, String id) {
+        this.bucket = redissonClient.getBucket(RedissonKey.REDISSON_HOLDER + id);
         this.ttl = ttl;
     }
 

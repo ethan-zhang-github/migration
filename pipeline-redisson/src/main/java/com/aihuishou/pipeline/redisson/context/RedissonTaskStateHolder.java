@@ -7,14 +7,17 @@ import com.aihuishou.pipeline.redisson.constant.RedissonKey;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 
+import java.time.Duration;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class RedissonTaskStateHolder extends CasHolder<TaskState> {
 
     protected RBucket<TaskState> state;
 
-    public RedissonTaskStateHolder(RedissonClient redissonClient) {
-        this.state = redissonClient.getBucket(RedissonKey.REDISSON_TASK_STATE + UUID.randomUUID());
+    public RedissonTaskStateHolder(RedissonClient redissonClient, Duration ttl, String id) {
+        this.state = redissonClient.getBucket(RedissonKey.REDISSON_TASK_STATE + id);
+        state.expire(ttl.getSeconds(), TimeUnit.SECONDS);
     }
 
     @Override
