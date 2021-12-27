@@ -1,9 +1,8 @@
 package com.aihuishou.pipeline.core.processor;
 
 import com.aihuishou.pipeline.core.buffer.DataBuffer;
-import com.aihuishou.pipeline.core.common.Holder;
-import com.aihuishou.pipeline.core.context.TaskState;
-import lombok.Builder;
+import com.aihuishou.pipeline.core.context.TaskStateHolder;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,7 +13,7 @@ import lombok.Setter;
  * @author ethan zhang
  */
 @Getter
-@Setter
+@Setter(AccessLevel.PRIVATE)
 public class PipeProcessorNode<I, O> {
 
     /**
@@ -25,12 +24,14 @@ public class PipeProcessorNode<I, O> {
     /**
      * 当前节点状态
      */
-    private Holder<TaskState> state;
+    private TaskStateHolder state;
 
     /**
      * 写出缓冲区
      */
     private DataBuffer<O> buffer;
+
+    private PipeProcessorNode() {}
 
     public static <I, O> Builder<I, O> builder() {
         return new Builder<>();
@@ -45,7 +46,7 @@ public class PipeProcessorNode<I, O> {
             return Builder.this;
         }
 
-        public Builder<I, O> state(Holder<TaskState> state) {
+        public Builder<I, O> state(TaskStateHolder state) {
             node.setState(state);
             return Builder.this;
         }

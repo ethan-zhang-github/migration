@@ -26,11 +26,11 @@ public abstract class AbstractTaskContext<I, O> implements TaskContext<I, O> {
 
     protected Counter writerCounter;
 
-    protected Holder<TaskState> readerState;
+    protected TaskStateHolder readerState;
 
-    protected Holder<TaskState> processorState;
+    protected TaskStateHolder processorState;
 
-    protected Holder<TaskState> writerState;
+    protected TaskStateHolder writerState;
 
     protected Holder<Long> total;
 
@@ -80,17 +80,17 @@ public abstract class AbstractTaskContext<I, O> implements TaskContext<I, O> {
     }
 
     @Override
-    public Holder<TaskState> getReaderState() {
+    public TaskStateHolder getReaderState() {
         return readerState;
     }
 
     @Override
-    public Holder<TaskState> getProcessorState() {
+    public TaskStateHolder getProcessorState() {
         return processorState;
     }
 
     @Override
-    public Holder<TaskState> getWriterState() {
+    public TaskStateHolder getWriterState() {
         return writerState;
     }
 

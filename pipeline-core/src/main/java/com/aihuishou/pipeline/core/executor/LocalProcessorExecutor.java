@@ -74,7 +74,7 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
             futures.add(CompletableFuture.runAsync(() -> {
                 while (true) {
                     // 上个节点状态，头节点取 reader state，非头节点取上个节点的 state
-                    TaskState preState = isHead ? context.getReaderState().get() : (TaskState) pre.getState().get();
+                    TaskState preState = isHead ? context.getReaderState().get() : pre.getState().get();
                     // 若上个节点的状态不是 running 并且读取缓冲区为空，跳出循环
                     if (preState != TaskState.RUNNING && readBuffer.isEmpty()) {
                         break;
@@ -121,7 +121,7 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
                     }
                 }
                 // 将当前节点状态更新为上个节点状态
-                TaskState preState = isHead ? context.getReaderState().get() : (TaskState) pre.getState().get();
+                TaskState preState = isHead ? context.getReaderState().get() : pre.getState().get();
                 cur.getState().set(preState);
                 if (isTail) {
                     // 若当前节点为尾结点，则将 processor 状态更新为与 reader 一致
@@ -132,7 +132,6 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
         future = BatchUtil.merge(futures, Functions.firstOneBinaryOperator());
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void stop(PipeTask<I, O> task, PipeProcessorChain<I, O> processorChain) {
         TaskContext<I, O> context = task.getContext();
@@ -144,7 +143,6 @@ public class LocalProcessorExecutor<I, O> implements ProcessorExecutor<I, O> {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public void shutDown(PipeTask<I, O> task, PipeProcessorChain<I, O> processorChain) {
         TaskContext<I, O> context = task.getContext();

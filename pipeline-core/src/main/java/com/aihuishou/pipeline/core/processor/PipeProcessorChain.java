@@ -11,12 +11,14 @@ import java.util.stream.Collectors;
 @Getter
 public class PipeProcessorChain<I, O> {
 
+    @SuppressWarnings("rawtypes")
     private final LinkedList<PipeProcessorNode> nodes;
 
     public PipeProcessorChain(PipeProcessorNode<I, O> node) {
         this.nodes = new LinkedList<>(Collections.singleton(node));
     }
 
+    @SuppressWarnings("rawtypes")
     public PipeProcessorChain(Collection<PipeProcessorNode> nodes) {
         this.nodes = new LinkedList<>(nodes);
     }

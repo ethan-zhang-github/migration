@@ -5,7 +5,7 @@ import com.aihuishou.pipeline.core.exception.StateTransferException;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-public class LocalTaskStateHolder extends CasHolder<TaskState> {
+public class LocalTaskStateHolder extends CasHolder<TaskState> implements TaskStateHolder {
 
     private final AtomicReference<TaskState> state;
 

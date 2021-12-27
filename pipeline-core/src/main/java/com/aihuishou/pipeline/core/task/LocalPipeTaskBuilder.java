@@ -13,6 +13,12 @@ import com.aihuishou.pipeline.core.manager.LocalTaskManager;
 
 import java.util.Optional;
 
+/**
+ * 本地任务构建者
+ * @param <I> 输入类型
+ * @param <O> 输出类型
+ * @author ethan zhang
+ */
 public class LocalPipeTaskBuilder<I, O> extends AbstractPipeTaskBuilder<I, O, LocalPipeTaskBuilder<I, O>> {
 
     private LocalPipeTaskBuilder() {

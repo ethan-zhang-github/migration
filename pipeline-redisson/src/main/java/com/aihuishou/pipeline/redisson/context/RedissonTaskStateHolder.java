@@ -2,16 +2,16 @@ package com.aihuishou.pipeline.redisson.context;
 
 import com.aihuishou.pipeline.core.common.CasHolder;
 import com.aihuishou.pipeline.core.context.TaskState;
+import com.aihuishou.pipeline.core.context.TaskStateHolder;
 import com.aihuishou.pipeline.core.exception.StateTransferException;
 import com.aihuishou.pipeline.redisson.constant.RedissonKey;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 
 import java.time.Duration;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-public class RedissonTaskStateHolder extends CasHolder<TaskState> {
+public class RedissonTaskStateHolder extends CasHolder<TaskState> implements TaskStateHolder {
 
     protected RBucket<TaskState> state;
 

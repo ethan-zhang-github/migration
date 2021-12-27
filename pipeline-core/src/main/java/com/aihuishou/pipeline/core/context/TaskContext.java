@@ -30,11 +30,11 @@ public interface TaskContext<I, O> {
 
     Counter getWriterCounter();
 
-    Holder<TaskState> getReaderState();
+    TaskStateHolder getReaderState();
 
-    Holder<TaskState> getProcessorState();
+    TaskStateHolder getProcessorState();
 
-    Holder<TaskState> getWriterState();
+    TaskStateHolder getWriterState();
 
     Holder<Long> getTotal();
 

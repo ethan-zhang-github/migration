@@ -1,10 +1,9 @@
 package com.aihuishou.pipeline.core.task;
 
 import com.aihuishou.pipeline.core.buffer.DataBuffer;
-import com.aihuishou.pipeline.core.common.Holder;
 import com.aihuishou.pipeline.core.config.GlobalConfig;
 import com.aihuishou.pipeline.core.context.TaskParameter;
-import com.aihuishou.pipeline.core.context.TaskState;
+import com.aihuishou.pipeline.core.context.TaskStateHolder;
 import com.aihuishou.pipeline.core.processor.PipeProcessor;
 import com.aihuishou.pipeline.core.processor.PipeProcessorChain;
 import com.aihuishou.pipeline.core.processor.PipeProcessorNode;
@@ -53,13 +52,13 @@ public abstract class AbstractPipeTaskBuilder<I, O, C extends AbstractPipeTaskBu
     @SuppressWarnings("rawtypes")
     protected Function<Integer, DataBuffer> dataBufferGenerator;
 
-    protected Supplier<Holder<TaskState>> taskStateGenerator;
+    protected Supplier<TaskStateHolder> taskStateGenerator;
 
     protected Executor executor = Executors.newCachedThreadPool();
 
     @SuppressWarnings("rawtypes")
     protected AbstractPipeTaskBuilder(Supplier<TaskParameter> parameterGenerator, Function<Integer, DataBuffer> dataBufferGenerator,
-                                      Supplier<Holder<TaskState>> taskStateGenerator) {
+                                      Supplier<TaskStateHolder> taskStateGenerator) {
         this.parameter = parameterGenerator.get();
         this.dataBufferGenerator = dataBufferGenerator;
         this.taskStateGenerator = taskStateGenerator;
