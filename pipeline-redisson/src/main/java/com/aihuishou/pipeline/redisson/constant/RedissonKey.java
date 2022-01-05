@@ -20,4 +20,6 @@ public interface RedissonKey {
 
     String REDISSON_TASK_ID_GENERATOR = PIPELINE_REDISSON + "task-id-generator:";
 
+    String REDISSON_TASK_EVENT_DISPATCHER = PIPELINE_REDISSON + "task-event-dispatcher";
+
 }
