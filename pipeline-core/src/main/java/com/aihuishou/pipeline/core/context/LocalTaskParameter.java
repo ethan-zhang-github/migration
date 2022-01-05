@@ -1,7 +1,9 @@
 package com.aihuishou.pipeline.core.context;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 任务参数
@@ -10,21 +12,19 @@ public class LocalTaskParameter implements TaskParameter {
 
     private final JSONObject parameters;
 
-    private LocalTaskParameter(JSONObject parameters) {
-        this.parameters = parameters;
-    }
-
-    public static LocalTaskParameter newInstance() {
-        return new LocalTaskParameter(new JSONObject());
-    }
-
-    public static LocalTaskParameter fromJson(String json) {
-        return new LocalTaskParameter(JSON.parseObject(json));
+    public LocalTaskParameter() {
+        this.parameters = new JSONObject();
     }
 
     @Override
     public LocalTaskParameter addParameter(String key, Object value) {
         parameters.put(key, value);
+        return this;
+    }
+
+    @Override
+    public TaskParameter addParameters(Map<String, Object> parameters) {
+        this.parameters.putAll(parameters);
         return this;
     }
 
@@ -36,6 +36,11 @@ public class LocalTaskParameter implements TaskParameter {
     @Override
     public <T> T getObject(String key, Class<T> clazz) {
         return parameters.getObject(key, clazz);
+    }
+
+    @Override
+    public Map<String, Object> asMap() {
+        return new HashMap<>(parameters);
     }
 
     @Override

@@ -5,13 +5,25 @@ import com.aihuishou.pipeline.core.exception.StateTransferException;
 
 import java.util.concurrent.atomic.AtomicReference;
 
-public class LocalTaskStateHolder extends CasHolder<TaskState> {
+public class LocalTaskStateHolder extends CasHolder<TaskState> implements TaskStateHolder {
 
     private final AtomicReference<TaskState> state;
 
     public LocalTaskStateHolder() {
         super(TaskState.NEW);
         this.state = new AtomicReference<>(initialVal);
+    }
+
+    @Override
+    protected void validate(TaskState origin, TaskState target) {
+        if (!TaskState.canTransfer(origin, target)) {
+            throw new StateTransferException(origin, target);
+        }
+    }
+
+    @Override
+    protected boolean compareAndSet(TaskState origin, TaskState target) {
+        return state.compareAndSet(origin, target);
     }
 
     @Override
@@ -27,41 +39,6 @@ public class LocalTaskStateHolder extends CasHolder<TaskState> {
     @Override
     public boolean isPresent() {
         return state.get() != null;
-    }
-
-    @Override
-    protected void validate(TaskState origin, TaskState target) {
-        switch (target) {
-            case NEW:
-                throw new StateTransferException(origin, target);
-            case RUNNING:
-                if (!origin.canRun()) {
-                    throw new StateTransferException(origin, target);
-                }
-                break;
-            case STOPPING:
-                if (!origin.canStop()) {
-                    throw new StateTransferException(origin, target);
-                }
-                break;
-            case TERMINATED:
-                if (origin != TaskState.RUNNING && origin != TaskState.STOPPING) {
-                    throw new StateTransferException(origin, target);
-                }
-                break;
-            case FAILED:
-                if (origin != TaskState.RUNNING) {
-                    throw new StateTransferException(origin, target);
-                }
-                break;
-            default:
-                break;
-        }
-    }
-
-    @Override
-    protected boolean compareAndSet(TaskState origin, TaskState target) {
-        return state.compareAndSet(origin, target);
     }
 
     @Override

@@ -18,7 +18,7 @@ class RedissonTaskRegistry implements TaskRegistry {
 
     @Override
     public void register(PipeTask<?, ?> task) {
-
+        cache.put(task.getTaskId(), task);
     }
 
     @Override

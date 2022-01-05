@@ -1,18 +1,17 @@
 package com.aihuishou.pipeline.core.task;
 
-import com.aihuishou.pipeline.core.event.TaskLifecycleEvent;
-import com.aihuishou.pipeline.core.event.subscriber.PipeTaskEventSubscriber;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
 import com.aihuishou.pipeline.core.context.TaskContext;
+import com.aihuishou.pipeline.core.event.TaskLifecycleEvent;
 import com.aihuishou.pipeline.core.event.dispatcher.TaskEventDispatcher;
+import com.aihuishou.pipeline.core.event.subscriber.PipeTaskEventSubscriber;
 import com.aihuishou.pipeline.core.executor.TaskExecutor;
 import com.aihuishou.pipeline.core.manager.TaskManager;
 import com.aihuishou.pipeline.core.processor.PipeProcessorChain;
 import com.aihuishou.pipeline.core.reader.PipeReader;
 import com.aihuishou.pipeline.core.reporter.TaskReporter;
 import com.aihuishou.pipeline.core.writer.PipeWriter;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.function.Consumer;
 
@@ -23,7 +22,7 @@ import java.util.function.Consumer;
  * @author ethan zhang
  */
 @Getter
-@Setter(AccessLevel.PACKAGE)
+@Setter
 public class PipeTask<I, O> {
 
     private String taskId;

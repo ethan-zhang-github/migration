@@ -12,15 +12,13 @@ import com.aihuishou.pipeline.core.reader.PipeReader;
 import com.aihuishou.pipeline.core.task.PipeTask;
 import com.github.rholder.retry.RetryException;
 import com.github.rholder.retry.Retryer;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.ListeningExecutorService;
-import com.google.common.util.concurrent.MoreExecutors;
 import lombok.Getter;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 
 /**
  * 本地读取执行器
@@ -31,12 +29,12 @@ import java.util.concurrent.ExecutorService;
 @Getter
 public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
 
-    private final ListeningExecutorService executor;
+    private final Executor executor;
 
-    private ListenableFuture<?> readerFuture;
+    private CompletableFuture<Void> future;
 
-    public LocalReaderExecutor(ExecutorService executor) {
-        this.executor = MoreExecutors.listeningDecorator(executor);
+    public LocalReaderExecutor(Executor executor) {
+        this.executor = executor;
     }
 
     @Override
@@ -50,7 +48,7 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
         TaskConfigAttributes attributes = TaskConfigAttributes.fromClass(reader.getClass());
         Retryer<Boolean> retryer = attributes.buidlRetryer();
         DataBuffer<I> readBuffer = context.getReadBuffer();
-        readerFuture =  executor.submit(() -> {
+        future = CompletableFuture.runAsync(() -> {
             reader.initialize(context);
             while (context.getReaderState().get() == TaskState.RUNNING) {
                 if (Thread.currentThread().isInterrupted()) {
@@ -80,7 +78,7 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
                     for (I i : chunk) {
                         try {
                             if (retryer.call(() -> readBuffer.tryProduce(i))) {
-                                context.getReadCounter().incr();
+                                context.getReaderCounter().incr();
                             }
                         } catch (ExecutionException | RetryException e) {
                             task.getDispatcher().dispatch(new TaskWarnningEvent(task, TaskWarnningEvent.Cause.READER_TO_BUFFER_FAILED, e));
@@ -88,7 +86,7 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
                     }
                 }
             }
-        });
+        }, executor);
     }
 
     @Override
@@ -106,7 +104,7 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
         TaskContext<I, O> context = task.getContext();
         if (context.getReaderState().get().canShutdown()) {
             context.getReaderState().set(TaskState.TERMINATED);
-            Optional.ofNullable(readerFuture).ifPresent(t -> t.cancel(true));
+            Optional.ofNullable(future).ifPresent(f -> f.cancel(true));
         } else {
             throw new TaskExecutionException("The reader can not shutdown on this state!");
         }
@@ -114,11 +112,7 @@ public class LocalReaderExecutor<I, O> implements ReaderExecutor<I, O> {
 
     @Override
     public void join(PipeTask<I, O> task, PipeReader<I> reader) {
-        try {
-            readerFuture.get();
-        } catch (InterruptedException | ExecutionException e) {
-            throw new TaskExecutionException("The reader join failed!", e);
-        }
+        future.join();
     }
 
 }

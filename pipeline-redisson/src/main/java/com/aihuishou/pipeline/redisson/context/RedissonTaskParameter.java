@@ -5,6 +5,9 @@ import com.aihuishou.pipeline.redisson.constant.RedissonKey;
 import org.redisson.api.RMap;
 import org.redisson.api.RedissonClient;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class RedissonTaskParameter implements TaskParameter {
 
     private final RMap<String, Object> parameters;
@@ -16,6 +19,12 @@ public class RedissonTaskParameter implements TaskParameter {
     @Override
     public RedissonTaskParameter addParameter(String key, Object value) {
         parameters.put(key, value);
+        return this;
+    }
+
+    @Override
+    public TaskParameter addParameters(Map<String, Object> parameters) {
+        this.parameters.putAll(parameters);
         return this;
     }
 
@@ -34,6 +43,11 @@ public class RedissonTaskParameter implements TaskParameter {
             }
         }
         return null;
+    }
+
+    @Override
+    public Map<String, Object> asMap() {
+        return new HashMap<>(parameters);
     }
 
 }

@@ -1,16 +1,11 @@
 package com.aihuishou.pipeline.core.config;
 
-import com.aihuishou.pipeline.core.buffer.DataBuffer;
-import com.aihuishou.pipeline.core.buffer.DisruptorDataBuffer;
-import com.aihuishou.pipeline.core.event.dispatcher.DisruptorTaskEventDispatcher;
-import com.aihuishou.pipeline.core.event.dispatcher.TaskEventDispatcher;
 import com.aihuishou.pipeline.core.reporter.LoggerTaskReporter;
 import com.aihuishou.pipeline.core.reporter.TaskReporter;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.Duration;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -75,9 +70,6 @@ public interface GlobalConfig {
 
         private int bufferSize = 1 << 10;
 
-        @SuppressWarnings("rawtypes")
-        private Function<Integer, DataBuffer> defaultDataBuffer = DisruptorDataBuffer::new;
-
     }
 
     @Getter
@@ -118,8 +110,6 @@ public interface GlobalConfig {
     class LocalDispatcher {
 
         private int bufferSize = 1 << 10;
-
-        private Supplier<TaskEventDispatcher> defaultDispatcher = () -> DisruptorTaskEventDispatcher.INSTANCE;
 
     }
 

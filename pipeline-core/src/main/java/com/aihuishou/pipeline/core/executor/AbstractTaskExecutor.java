@@ -29,7 +29,7 @@ public abstract class AbstractTaskExecutor<I, O> implements TaskExecutor<I, O> {
     public synchronized void start(PipeTask<I, O> task) {
         TaskContext<I, O> context = task.getContext();
         if (context.getReaderState().get().canRun() && context.getProcessorState().get().canRun() && context.getWriterState().get().canRun()) {
-            context.getStartTimestamp().set(Instant.now());
+            context.getStartTime().set(Instant.now());
             readerExecutor.start(task, task.getReader());
             processorExecutor.start(task, task.getProcessorChain());
             writerExecutor.start(task, task.getWriter());

@@ -1,10 +1,8 @@
 package com.aihuishou.pipeline.core.processor;
 
 import com.aihuishou.pipeline.core.buffer.DataBuffer;
-import com.aihuishou.pipeline.core.config.GlobalConfig;
-import com.aihuishou.pipeline.core.common.Holder;
-import com.aihuishou.pipeline.core.context.LocalTaskStateHolder;
-import com.aihuishou.pipeline.core.context.TaskState;
+import com.aihuishou.pipeline.core.context.TaskStateHolder;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,39 +13,53 @@ import lombok.Setter;
  * @author ethan zhang
  */
 @Getter
-@Setter
+@Setter(AccessLevel.PRIVATE)
 public class PipeProcessorNode<I, O> {
 
     /**
      * 当前节点的 processor
      */
-    private PipeProcessor<I, O> processor;
+    private PipeProcessor<? super I, ? extends O> processor;
 
     /**
      * 当前节点状态
      */
-    private Holder<TaskState> state;
+    private TaskStateHolder state;
 
     /**
      * 写出缓冲区
      */
     private DataBuffer<O> buffer;
 
-    @SuppressWarnings("unchecked")
-    public PipeProcessorNode(PipeProcessor<I, O> processor, int bufferSize) {
-        this.processor = processor;
-        this.state = new LocalTaskStateHolder();
-        this.buffer = GlobalConfig.BUFFER.getDefaultDataBuffer().apply(bufferSize);
+    private PipeProcessorNode() {}
+
+    public static <I, O> Builder<I, O> builder() {
+        return new Builder<>();
     }
 
-    public PipeProcessorNode(PipeProcessor<I, O> processor) {
-        this.processor = processor;
-        this.state = new LocalTaskStateHolder();
-        this.buffer = DataBuffer.empty();
-    }
+    public static class Builder<I, O> {
 
-    public Holder<TaskState> getState() {
-        return state;
+        private final PipeProcessorNode<I, O> node = new PipeProcessorNode<>();
+
+        public Builder<I, O> processor(PipeProcessor<? super I, ? extends O> processor) {
+            node.setProcessor(processor);
+            return Builder.this;
+        }
+
+        public Builder<I, O> state(TaskStateHolder state) {
+            node.setState(state);
+            return Builder.this;
+        }
+
+        public Builder<I, O> buffer(DataBuffer<O> buffer) {
+            node.setBuffer(buffer);
+            return Builder.this;
+        }
+
+        public PipeProcessorNode<I, O> build() {
+            return node;
+        }
+
     }
 
 }

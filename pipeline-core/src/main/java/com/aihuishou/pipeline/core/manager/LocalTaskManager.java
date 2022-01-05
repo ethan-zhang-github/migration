@@ -1,8 +1,8 @@
 package com.aihuishou.pipeline.core.manager;
 
-import com.aihuishou.pipeline.core.config.GlobalConfig;
 import com.aihuishou.pipeline.core.context.TaskState;
 import com.aihuishou.pipeline.core.event.*;
+import com.aihuishou.pipeline.core.event.dispatcher.DisruptorTaskEventDispatcher;
 import com.aihuishou.pipeline.core.event.dispatcher.TaskEventDispatcher;
 import com.aihuishou.pipeline.core.event.subscriber.GenericTaskEventSubscriber;
 import com.aihuishou.pipeline.core.task.PipeTask;
@@ -21,6 +21,8 @@ public enum LocalTaskManager implements TaskManager {
 
     private TaskRegistry registry;
 
+    private TaskEventDispatcher dispatcher;
+
     private AbstractTaskScheduler taskScheduler;
 
     {
@@ -31,6 +33,7 @@ public enum LocalTaskManager implements TaskManager {
     public void initialize() {
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutDown));
         registry = new InMemoryTaskRegistry();
+        dispatcher = DisruptorTaskEventDispatcher.INSTANCE;
         taskScheduler = new LocalReporterScheduler(registry);
         taskScheduler.start();
         addSubscribers();
@@ -49,7 +52,6 @@ public enum LocalTaskManager implements TaskManager {
     }
 
     private void addSubscribers() {
-        TaskEventDispatcher dispatcher = GlobalConfig.LOCAL_DISPATCHER.getDefaultDispatcher().get();
         dispatcher.addSubsriber(new GenericTaskEventSubscriber<TaskStartedEvent>() {
             @Override
             protected void subscribeInternal(TaskStartedEvent event) {
@@ -76,7 +78,7 @@ public enum LocalTaskManager implements TaskManager {
             protected void subscribeInternal(TaskFinishedEvent event) {
                 PipeTask<?, ?> task = event.getTask();
                 task.getReporter().reportEvent(event);
-                task.getContext().getFinishTimestamp().set(Instant.now());
+                task.getContext().getFinishTime().set(Instant.now());
                 task.getReporter().report(task);
                 task.getDispatcher().clearTaskEventStream(task.getTaskId());
                 registry.unregister(task);

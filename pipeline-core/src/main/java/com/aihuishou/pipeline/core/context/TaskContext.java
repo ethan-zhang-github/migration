@@ -16,39 +16,58 @@ import java.time.Instant;
  */
 public interface TaskContext<I, O> {
 
-    TaskParameter getParameter();
-
     PipeTask<I, O> getTask();
+
+    TaskParameter getParameter();
 
     DataBuffer<I> getReadBuffer();
 
     DataBuffer<O> getWriteBuffer();
 
-    Counter getReadCounter();
+    Counter getReaderCounter();
 
-    Counter getProcessedCounter();
+    Counter getProcessorCounter();
 
-    Counter getWrittenCounter();
+    Counter getWriterCounter();
 
-    Holder<TaskState> getReaderState();
+    TaskStateHolder getReaderState();
 
-    Holder<TaskState> getProcessorState();
+    TaskStateHolder getProcessorState();
 
-    Holder<TaskState> getWriterState();
+    TaskStateHolder getWriterState();
 
     Holder<Long> getTotal();
 
-    Holder<Instant> getStartTimestamp();
+    Holder<Instant> getStartTime();
 
-    Holder<Instant> getFinishTimestamp();
-
-    Duration getCost();
+    Holder<Instant> getFinishTime();
 
     Holder<Duration> getReportPeriod();
 
     Holder<Duration> getTimeout();
 
-    boolean isTimeout();
+    default Duration getCost() {
+        if (!getStartTime().isPresent()) {
+            return Duration.ZERO;
+        }
+        if (!getFinishTime().isPresent()) {
+            return Duration.between(getStartTime().get(), Instant.now());
+        }
+        return Duration.between(getStartTime().get(), getFinishTime().get());
+    }
+
+    default boolean isTimeout() {
+        if (!getTimeout().isPresent()) {
+            return false;
+        }
+        if (!getStartTime().isPresent()) {
+            return false;
+        }
+        if (!getFinishTime().isPresent()) {
+            return false;
+        }
+        return Duration.between(getStartTime().get(), Instant.now()).compareTo(getTimeout().get()) > 0;
+    }
 
     default boolean isTerminated() {
         return getReaderState().get() == TaskState.TERMINATED && getProcessorState().get() == TaskState.TERMINATED && getWriterState().get() == TaskState.TERMINATED;

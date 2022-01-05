@@ -10,4 +10,16 @@ public interface RedissonKey {
 
     String REDISSON_TASK_PARAMETER = PIPELINE_REDISSON + "task-parameter:";
 
+    String REDISSON_COUNTER = PIPELINE_REDISSON + "counter:";
+
+    String REDISSON_MARKER = PIPELINE_REDISSON + "marker:";
+
+    String REDISSON_TASK_STATE = PIPELINE_REDISSON + "task-state:";
+
+    String REDISSON_HOLDER = PIPELINE_REDISSON + "holder:";
+
+    String REDISSON_TASK_ID_GENERATOR = PIPELINE_REDISSON + "task-id-generator:";
+
+    String REDISSON_TASK_EVENT_DISPATCHER = PIPELINE_REDISSON + "task-event-dispatcher";
+
 }

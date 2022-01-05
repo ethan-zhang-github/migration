@@ -2,12 +2,14 @@ package com.aihuishou.pipeline.core.utils;
 
 import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.*;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 /**
@@ -74,18 +76,27 @@ public class BatchUtil {
         return mergeList(futures);
     }
 
-    /**
-     * 将多个 CompletableFuture<List<T>> 聚合
-     */
     public static <T> CompletableFuture<List<T>> mergeList(Collection<CompletableFuture<List<T>>> source) {
-        return CompletableFuture.allOf(source.toArray(new CompletableFuture[0])).thenApply(v -> source.stream().map(CompletableFuture::join).flatMap(List::stream).collect(Collectors.toList()));
+        return merge(source, ArrayList::new, List::addAll, List::addAll);
     }
 
-    /**
-     * 将多个 CompletableFuture<T> 聚合
-     */
     public static <T> CompletableFuture<List<T>> merge(Collection<CompletableFuture<T>> source) {
-        return CompletableFuture.allOf(source.toArray(new CompletableFuture[0])).thenApply(v -> source.stream().map(CompletableFuture::join).collect(Collectors.toList()));
+        return merge(source, Collectors.toList());
+    }
+
+    public static <T, A, R> CompletableFuture<R> merge(Collection<CompletableFuture<T>> source, Collector<? super T, A, R> collector) {
+        return CompletableFuture.allOf(source.toArray(new CompletableFuture[0])).thenApply(v -> source.stream().map(CompletableFuture::join).collect(collector));
+    }
+
+    public static <T, A, R> CompletableFuture<R> merge(Collection<CompletableFuture<T>> source,
+                                                       Supplier<R> supplier,
+                                                       BiConsumer<R, ? super T> accumulator,
+                                                       BiConsumer<R, R> combiner) {
+        return CompletableFuture.allOf(source.toArray(new CompletableFuture[0])).thenApply(v -> source.stream().map(CompletableFuture::join).collect(supplier, accumulator, combiner));
+    }
+
+    public static <T> CompletableFuture<T> merge(Collection<CompletableFuture<T>> source, BinaryOperator<T> accumulator) {
+        return CompletableFuture.allOf(source.toArray(new CompletableFuture[0])).thenApply(v -> source.stream().map(CompletableFuture::join).filter(Objects::nonNull).reduce(accumulator).orElse(null));
     }
 
 }

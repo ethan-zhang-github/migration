@@ -2,7 +2,7 @@ package com.aihuishou.pipeline.core.executor;
 
 import lombok.Getter;
 
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 
 /**
  * 本地任务执行器
@@ -13,7 +13,7 @@ import java.util.concurrent.ExecutorService;
 @Getter
 public class LocalTaskExecutor<I, O> extends AbstractTaskExecutor<I, O> {
 
-    public LocalTaskExecutor(ExecutorService executor) {
+    public LocalTaskExecutor(Executor executor) {
         super(new LocalReaderExecutor<>(executor), new LocalProcessorExecutor<>(executor), new LocalWriterExecutor<>(executor));
     }
 
